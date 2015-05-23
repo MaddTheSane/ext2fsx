@@ -1,4 +1,4 @@
-/*
+/*-
  * Copyright (c) 1982, 1986, 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -27,11 +27,11 @@
  * SUCH DAMAGE.
  *
  *	@(#)ufsmount.h	8.6 (Berkeley) 3/30/95
- * $FreeBSD: src/sys/gnu/ext2fs/ext2_mount.h,v 1.25 2002/05/24 17:38:01 mux Exp $
+ * $FreeBSD$
  */
 
-#ifndef _SYS_GNU_EXT2FS_EXT2_MOUNT_H_
-#define _SYS_GNU_EXT2FS_EXT2_MOUNT_H_
+#ifndef _FS_EXT2FS_EXT2_MOUNT_H_
+#define	_FS_EXT2FS_EXT2_MOUNT_H_
 
 #ifdef _KERNEL
 
@@ -39,31 +39,40 @@
 MALLOC_DECLARE(M_EXT2NODE);
 #endif
 
+struct vnode;
+
 /* This structure describes the ext2fs specific mount structure data. */
 struct ext2mount {
-	mount_t um_mountp;		/* filesystem vfs structure */
-	dev_t	um_dev;			/* device mounted */
-	vnode_t um_devvp;		/* block device mounted vnode */
+	struct	mount *um_mountp;		/* filesystem vfs structure */
+			dev_t *um_dev;			/* device mounted */
+	struct	vnode *um_devvp;		/* block device mounted vnode */
 
-	struct	ext2_sb_info *um_e2fs;		/* EXT2FS */
-#define em_e2fsb um_e2fs->s_es
+	struct	m_ext2fs *um_e2fs;		/* EXT2FS */
 
 	u_long	um_nindir;			/* indirect ptrs per block */
 	u_long	um_bptrtodb;			/* indir ptr to disk block */
 	u_long	um_seqinc;			/* inc between seq blocks */
+
+	struct mtx um_lock;			/* Protects ext2mount & fs */
+
+	struct g_consumer *um_cp;
+	struct bufobj *um_bo;
 };
 
+#define	EXT2_LOCK(aa)		mtx_lock(&(aa)->um_lock)
+#define	EXT2_UNLOCK(aa)	mtx_unlock(&(aa)->um_lock)
+#define	EXT2_MTX(aa)		(&(aa)->um_lock)
+
 /* Convert mount ptr to ext2fsmount ptr. */
-#define VFSTOEXT2(mp)	((struct ext2mount *)vfs_fsprivate(mp))
+#define	VFSTOEXT2(mp)	((struct ext2mount *)vfs_fsprivate(mp))
 
 /*
  * Macros to access file system parameters in the ufsmount structure.
  * Used by ufs_bmap.
  */
-#define MNINDIR(ump)			((ump)->um_nindir)
+#define	MNINDIR(ump)			((ump)->um_nindir)
 #define	blkptrtodb(ump, b)		((b) << (ump)->um_bptrtodb)
 #define	is_sequential(ump, a, b)	((b) == (a) + ump->um_seqinc)
-
 #endif /* _KERNEL */
 
-#endif
+#endif	/* !_FS_EXT2FS_EXT2_MOUNT_H_ */

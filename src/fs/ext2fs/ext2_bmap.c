@@ -1,4 +1,4 @@
-/*
+/*-
  * Copyright (c) 1989, 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
@@ -32,14 +32,12 @@
  * SUCH DAMAGE.
  *
  *	@(#)ufs_bmap.c	8.7 (Berkeley) 3/21/95
- * $FreeBSD: src/sys/gnu/ext2fs/ext2_bmap.c,v 1.53 2003/01/03 06:32:14 phk Exp $
+ * $FreeBSD$
  */
-
-static const char whatid[] __attribute__ ((unused)) =
-"@(#) $Id: ext2_bmap.c,v 1.24 2006/08/22 00:30:19 bbergstrand Exp $";
 
 #include <sys/param.h>
 #include <sys/systm.h>
+//#include <sys/bio.h>
 #include <sys/buf.h>
 #include <sys/proc.h>
 #include <sys/vnode.h>
@@ -47,16 +45,84 @@ static const char whatid[] __attribute__ ((unused)) =
 //#include <sys/resourcevar.h>
 #include <sys/stat.h>
 
-//#include <sys/trace.h>
-#include "ext2_apple.h"
+#include <fs/ext2fs/inode.h>
+#include <fs/ext2fs/fs.h>
+#include <fs/ext2fs/ext2fs.h>
+#include <fs/ext2fs/ext2_dinode.h>
+#include <fs/ext2fs/ext2_extern.h>
+#include <fs/ext2fs/ext2_mount.h>
 
-#include <gnu/ext2fs/ext2_fs.h> /* For linux type defines. */
-#include <gnu/ext2fs/fs.h>
-#include <gnu/ext2fs/inode.h>
-#include <gnu/ext2fs/ext2_mount.h>
-#include <gnu/ext2fs/ext2_extern.h>
-#include <gnu/ext2fs/ext2_fs_sb.h>
-#include <ext2_byteorder.h>
+static int ext4_bmapext(struct vnode *, int32_t, int64_t *, int *, int *);
+
+/*
+ * Bmap converts the logical block number of a file to its physical block
+ * number on the disk. The conversion is done by using the logical block
+ * number to index into the array of block pointers described by the dinode.
+ */
+int
+ext2_bmap(struct vnop_blockmap_args *ap)
+{
+	daddr_t blkno;
+	int error;
+
+	/*
+	 * Check for underlying vnode requests and ensure that logical
+	 * to physical mapping is requested.
+	 */
+	if (ap->a_bop != NULL)
+		*ap->a_bop = &VTOI(ap->a_vp)->i_devvp->v_bufobj;
+	if (ap->a_bnp == NULL)
+		return (0);
+
+	if (VTOI(ap->a_vp)->i_flag & IN_E4EXTENTS)
+		error = ext4_bmapext(ap->a_vp, ap->a_bn, &blkno,
+		    ap->a_runp, ap->a_runb);
+	else
+		error = ext2_bmaparray(ap->a_vp, ap->a_bn, &blkno,
+		    ap->a_runp, ap->a_runb);
+	*ap->a_bnp = blkno;
+	return (error);
+}
+
+/*
+ * This function converts the logical block number of a file to
+ * its physical block number on the disk within ext4 extents.
+ */
+static int
+ext4_bmapext(struct vnode *vp, int32_t bn, int64_t *bnp, int *runp, int *runb)
+{
+	struct inode *ip;
+	struct m_ext2fs *fs;
+	struct ext4_extent *ep;
+	struct ext4_extent_path path = { .ep_bp = NULL };
+	daddr_t lbn;
+
+	ip = VTOI(vp);
+	fs = ip->i_e2fs;
+	lbn = bn;
+
+	/*
+	 * TODO: need to implement read ahead to improve the performance.
+	 */
+	if (runp != NULL)
+		*runp = 0;
+
+	if (runb != NULL)
+		*runb = 0;
+
+	ext4_ext_find_extent(fs, ip, lbn, &path);
+	ep = path.ep_ext;
+	if (ep == NULL)
+		return (EIO);
+
+	*bnp = fsbtodb(fs, lbn - ep->e_blk +
+	    (ep->e_start_lo | (daddr_t)ep->e_start_hi << 32));
+
+	if (*bnp == 0)
+		*bnp = -1;
+
+	return (0);
+}
 
 /*
  * Indirect blocks are now on the vnode for the file.  They are given negative
@@ -73,46 +139,34 @@ static const char whatid[] __attribute__ ((unused)) =
  */
 
 int
-ext2_bmaparray(vp, bn, bnp, runp, runb)
-	vnode_t vp;
-	ext2_daddr_t bn;
-	ext2_daddr_t *bnp;
-	int *runp;
-	int *runb;
+ext2_bmaparray(struct vnode *vp, daddr_t bn, daddr_t *bnp, int *runp, int *runb)
 {
-	struct vfsioattr vfsio;
-    struct inode *ip;
-	buf_t  bp;
+	struct inode *ip;
+	struct buf *bp;
 	struct ext2mount *ump;
-	mount_t  mp;
-	vnode_t devvp;
+	struct mount *mp;
 	struct indir a[NIADDR+1], *ap;
-	ext2_daddr_t daddr;
-	ext2_daddr_t metalbn;
-	size_t maxrun = 0;
-    ext2_daddr_t *bap;
-	int num, *nump, error;
-    long iosize;
+	daddr_t daddr;
+	e2fs_lbn_t metalbn;
+	int error, num, maxrun = 0, bsize;
+	int *nump;
 
 	ap = NULL;
 	ip = VTOI(vp);
-	mp = ITOVFS(ip);
+	mp = vp->v_mount;
 	ump = VFSTOEXT2(mp);
-	devvp = ip->i_devvp;
-    assert(devvp != NULL);
-    assert(devvp == ump->um_devvp);
-    
-    vfs_ioattr(mp, &vfsio);
-    iosize = vfs_statfs(mp)->f_iosize;
+
+	bsize = EXT2_BLOCK_SIZE(ump->um_e2fs);
 
 	if (runp) {
-		maxrun = vfsio.io_maxwritecnt / iosize - 1;
+		maxrun = mp->mnt_iosize_max / bsize - 1;
 		*runp = 0;
 	}
 
 	if (runb) {
 		*runb = 0;
 	}
+
 
 	ap = a;
 	nump = &num;
@@ -122,12 +176,11 @@ ext2_bmaparray(vp, bn, bnp, runp, runb)
 
 	num = *nump;
 	if (num == 0) {
-		ISLOCK(ip);
-        *bnp = blkptrtodb(ump, ip->i_db[bn]);
+		*bnp = blkptrtodb(ump, ip->i_db[bn]);
 		if (*bnp == 0) {
 			*bnp = -1;
 		} else if (runp) {
-			ext2_daddr_t bnb = bn;
+			daddr_t bnb = bn;
 			for (++bn; bn < NDADDR && *runp < maxrun &&
 			    is_sequential(ump, ip->i_db[bn - 1], ip->i_db[bn]);
 			    ++bn, ++*runp);
@@ -135,91 +188,91 @@ ext2_bmaparray(vp, bn, bnp, runp, runb)
 			if (runb && (bn > 0)) {
 				for (--bn; (bn >= 0) && (*runb < maxrun) &&
 					is_sequential(ump, ip->i_db[bn],
-						ip->i_db[bn+1]);
+						ip->i_db[bn + 1]);
 						--bn, ++*runb);
 			}
 		}
-        IULOCK(ip);
 		return (0);
 	}
 
 
 	/* Get disk address out of indirect block array */
-    ISLOCK(ip);
 	daddr = ip->i_ib[ap->in_off];
-    IULOCK(ip);
 
 	for (bp = NULL, ++ap; --num; ++ap) {
-    
-		if ((metalbn = ap->in_lbn) == bn)
-            break; // found the block
-        
-        int flags;
-        if (0 == daddr)
-            flags = BLK_META | BLK_ONLYVALID;
-        else
-            flags = BLK_META;
-        
-        if (bp)
-			bqrelse(bp);
-        
-        if (NULL == (bp = buf_getblk(vp, (daddr64_t)metalbn, iosize, 0, 0, flags)))
-            break; // daddr was not set and indirect block was not in cache
-        
+		/*
+		 * Exit the loop if there is no disk address assigned yet and
+		 * the indirect block isn't in the cache, or if we were
+		 * looking for an indirect block and we've found it.
+		 */
+
+		metalbn = ap->in_lbn;
+		if ((daddr == 0 && !incore(&vp->v_bufobj, metalbn)) || metalbn == bn)
+			break;
 		/*
 		 * If we get here, we've either got the block in the cache
 		 * or we have a disk address for it, go fetch it.
 		 */
-		ap->in_exists = 1;
-        
-#ifdef DIAGNOSTIC
-        if (!daddr)
-            panic("ext2_bmaparray: indirect block not in cache");
-#endif
+		if (bp)
+			bqrelse(bp);
 
-        if (buf_valid(bp)) {
-            ;
-		} else {
-            buf_setblkno(bp, (daddr64_t)blkptrtodb(ump, daddr));
-            buf_setflags(bp, B_READ);
-            
-			struct vnop_strategy_args vsargs;
-            vsargs.a_desc = &vnop_strategy_desc;
-            vsargs.a_bp = bp;
-            buf_strategy(devvp, &vsargs);
+		bp = getblk(vp, metalbn, bsize, 0, 0, 0);
+		if ((bp->b_flags & B_CACHE) == 0) {
+#ifdef INVARIANTS
+			if (!daddr)
+				panic("ext2_bmaparray: indirect block not in cache");
+#endif
+			bp->b_blkno = blkptrtodb(ump, daddr);
+			bp->b_iocmd = BIO_READ;
+			bp->b_flags &= ~B_INVAL;
+			bp->b_ioflags &= ~BIO_ERROR;
+			vfs_busy_pages(bp, 0);
+			bp->b_iooffset = dbtob(bp->b_blkno);
+			bstrategy(bp);
+			curthread->td_ru.ru_inblock++;
 			error = bufwait(bp);
 			if (error) {
-				buf_brelse(bp);
+				brelse(bp);
 				return (error);
 			}
 		}
 
-        ISLOCK(ip);
-		bap = (ext2_daddr_t *)buf_dataptr(bp);
-        daddr = le32_to_cpu(bap[ap->in_off]);
+		daddr = ((e2fs_daddr_t *)bp->b_data)[ap->in_off];
 		if (num == 1 && daddr && runp) {
 			for (bn = ap->in_off + 1;
 			    bn < MNINDIR(ump) && *runp < maxrun &&
 			    is_sequential(ump,
-                le32_to_cpu(bap[bn - 1]),
-                le32_to_cpu(bap[bn]));
+			    ((e2fs_daddr_t *)bp->b_data)[bn - 1],
+			    ((e2fs_daddr_t *)bp->b_data)[bn]);
 			    ++bn, ++*runp);
 			bn = ap->in_off;
 			if (runb && bn) {
-				for(--bn; bn >= 0 && *runb < maxrun &&
-			    		is_sequential(ump,
-                        le32_to_cpu(bap[bn]),
-					    le32_to_cpu(bap[bn+1]));
-			    		--bn, ++*runb);
+				for (--bn; bn >= 0 && *runb < maxrun &&
+					is_sequential(ump,
+					((e2fs_daddr_t *)bp->b_data)[bn],
+					((e2fs_daddr_t *)bp->b_data)[bn + 1]);
+					--bn, ++*runb);
 			}
 		}
-        IULOCK(ip);
 	}
 	if (bp)
 		bqrelse(bp);
-   
-	if (0 == (*bnp = blkptrtodb(ump, daddr)))
+
+	/*
+	 * Since this is FFS independent code, we are out of scope for the
+	 * definitions of BLK_NOCOPY and BLK_SNAP, but we do know that they
+	 * will fall in the range 1..um_seqinc, so we use that test and
+	 * return a request for a zeroed out buffer if attempts are made
+	 * to read a BLK_NOCOPY or BLK_SNAP block.
+	 */
+	if ((ip->i_flags & SF_SNAPSHOT) && daddr > 0 && daddr < ump->um_seqinc){
 		*bnp = -1;
+		return (0);
+	}
+	*bnp = blkptrtodb(ump, daddr);
+	if (*bnp == 0) {
+		*bnp = -1;
+	}
 	return (0);
 }
 
@@ -233,18 +286,15 @@ ext2_bmaparray(vp, bn, bnp, runp, runb)
  * once with the offset into the page itself.
  */
 int
-ext2_getlbns(vp, bn, ap, nump)
-	vnode_t vp;
-	ext2_daddr_t bn;
-	struct indir *ap;
-	int *nump;
+ext2_getlbns(struct vnode *vp, daddr_t bn, struct indir *ap, int *nump)
 {
-	ext2_daddr_t blockcnt, metalbn, realbn;
+	long blockcnt;
+	e2fs_lbn_t metalbn, realbn;
 	struct ext2mount *ump;
 	int i, numlevels, off;
 	int64_t qblockcnt;
 
-	ump = VFSTOEXT2(vnode_mount(vp));
+	ump = VFSTOEXT2(vp->v_mount);
 	if (nump)
 		*nump = 0;
 	numlevels = 0;
@@ -290,23 +340,21 @@ ext2_getlbns(vp, bn, ap, nump)
 	 */
 	ap->in_lbn = metalbn;
 	ap->in_off = off = NIADDR - i;
-	ap->in_exists = 0;
 	ap++;
 	for (++numlevels; i <= NIADDR; i++) {
 		/* If searching for a meta-data block, quit when found. */
 		if (metalbn == realbn)
 			break;
 
-        off = (bn / blockcnt) % MNINDIR(ump);
+		off = (bn / blockcnt) % MNINDIR(ump);
 
 		++numlevels;
 		ap->in_lbn = metalbn;
 		ap->in_off = off;
-		ap->in_exists = 0;
 		++ap;
 
 		metalbn -= -1 + off * blockcnt;
-        blockcnt /= MNINDIR(ump);
+		blockcnt /= MNINDIR(ump);
 	}
 	if (nump)
 		*nump = numlevels;
