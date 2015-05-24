@@ -388,7 +388,7 @@ searchloop:
 		 */
 		if ((i_offset & bmask) == 0) {
 			if (bp != NULL)
-				brelse(bp);
+				buf_brelse(bp);
 			if ((error =
 			    ext2_blkatoff(vdp, (off_t)i_offset, NULL,
 			    &bp)) != 0)
@@ -487,7 +487,7 @@ searchloop:
 		goto searchloop;
 	}
 	if (bp != NULL)
-		brelse(bp);
+		buf_brelse(bp);
 	/*
 	 * If creating, and at end of pathname and current
 	 * directory has not been removed, then can consider
@@ -559,7 +559,7 @@ found:
 		dp->i_size = entryoffsetinblock+EXT2_DIR_REC_LEN(ep->e2d_namlen);
 		dp->i_flag |= IN_CHANGE | IN_UPDATE;
 	}
-	brelse(bp);
+	buf_brelse(bp);
 
 	/*
 	 * Found component in pathname.
@@ -916,10 +916,10 @@ ext2_direnter(struct inode *ip, struct vnode *dvp, struct componentname *cnp)
 	}
 	bcopy((caddr_t)&newdir, (caddr_t)ep, (u_int)newentrysize);
 	if (DOINGASYNC(dvp)) {
-		bdwrite(bp);
+		buf_bdwrite(bp);
 		error = 0;
 	} else {
-		error = bwrite(bp);
+		error = buf_bwrite(bp);
 	}
 	dp->i_flag |= IN_CHANGE | IN_UPDATE;
 	if (!error && dp->i_endoff && dp->i_endoff < dp->i_size)
@@ -958,7 +958,7 @@ ext2_dirremove(struct vnode *dvp, struct componentname *cnp)
 		    &bp)) != 0)
 			return (error);
 		ep->e2d_ino = 0;
-		error = bwrite(bp);
+		error = buf_bwrite(bp);
 		dp->i_flag |= IN_CHANGE | IN_UPDATE;
 		return (error);
 	}
@@ -976,9 +976,9 @@ ext2_dirremove(struct vnode *dvp, struct componentname *cnp)
 		rep = (struct ext2fs_direct_2 *)((char *)ep + ep->e2d_reclen);
 	ep->e2d_reclen += rep->e2d_reclen;
 	if (DOINGASYNC(dvp) && dp->i_count != 0)
-		bdwrite(bp);
+		buf_bdwrite(bp);
 	else
-		error = bwrite(bp);
+		error = buf_bwrite(bp);
 	dp->i_flag |= IN_CHANGE | IN_UPDATE;
 	return (error);
 }
@@ -1005,7 +1005,7 @@ ext2_dirrewrite(struct inode *dp, struct inode *ip, struct componentname *cnp)
 		ep->e2d_type = DTTOFT(IFTODT(ip->i_mode));
 	else
 		ep->e2d_type = EXT2_FT_UNKNOWN;
-	error = bwrite(bp);
+	error = buf_bwrite(bp);
 	dp->i_flag |= IN_CHANGE | IN_UPDATE;
 	return (error);
 }

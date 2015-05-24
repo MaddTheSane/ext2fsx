@@ -43,16 +43,30 @@
 #include <sys/buf.h>
 #include <sys/vnode.h>
 #include <sys/malloc.h>
+#include <sys/namei.h>
+#include <sys/ubc.h>
 //#include <sys/rwlock.h>
 
-#include <vm/vm.h>
-#include <vm/vm_extern.h>
+#include <sys/vm.h>
+#include <libkern/OSMalloc.h>
+
+#include "ext2_apple.h"
 
 #include <fs/ext2fs/inode.h>
 #include <fs/ext2fs/ext2_mount.h>
 #include <fs/ext2fs/ext2fs.h>
 #include <fs/ext2fs/fs.h>
 #include <fs/ext2fs/ext2_extern.h>
+
+#define	ASSERT_VI_LOCKED(vp, str)	((void)0)
+#define	ASSERT_VI_UNLOCKED(vp, str)	((void)0)
+#define	ASSERT_VOP_ELOCKED(vp, str)	((void)0)
+#define	ASSERT_VOP_LOCKED(vp, str)	((void)0)
+#define	ASSERT_VOP_UNLOCKED(vp, str)	((void)0)
+
+#define	B_CLUSTEROK	0x00020000	/* Pagein op, so swap() can count it. */
+
+#define DOINGASYNC(vp) (vfs_flags(vnode_mount(vp)) & MNT_ASYNC)
 
 static int ext2_indirtrunc(struct inode *, daddr_t, daddr_t,
 	    daddr_t, int, e4fs_daddr_t *);
@@ -83,18 +97,18 @@ ext2_update(struct vnode *vp, int waitfor)
 	fs = ip->i_e2fs;
 	if(fs->e2fs_ronly)
 		return (0);
-	if ((error = bread(ip->i_devvp,
+	if ((error = buf_meta_bread(ip->i_devvp,
 	    fsbtodb(fs, ino_to_fsba(fs, ip->i_number)),
 		(int)fs->e2fs_bsize, NOCRED, &bp)) != 0) {
-		brelse(bp);
+		buf_brelse(bp);
 		return (error);
 	}
-	ext2_i2ei(ip, (struct ext2fs_dinode *)((char *)bp->b_data +
+	ext2_i2ei(ip, (struct ext2fs_dinode *)(buf_dataptr(bp) +
 	    EXT2_INODE_SIZE(fs) * ino_to_fsbo(fs, ip->i_number)));
 	if (waitfor && !DOINGASYNC(vp))
-		return (bwrite(bp));
+		return (buf_bwrite(bp));
 	else {
-		bdwrite(bp);
+		buf_bdwrite(bp);
 		return (0);
 	}
 }
@@ -135,8 +149,8 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 	if (length < 0)
 	    return (EINVAL);
 
-	if (ovp->v_type == VLNK &&
-	    oip->i_size < ovp->v_mount->mnt_maxsymlinklen) {
+	if (VLNK == vnode_vtype(ovp) &&
+		oip->i_size < vnode_vfsmaxsymlen(ovp)) {
 #ifdef INVARIANTS
 		if (length != 0)
 			panic("ext2_truncate: partial truncate of symlink");
@@ -170,14 +184,17 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 			return (error);
 		}
 		oip->i_size = length;
-		if (bp->b_bufsize == fs->e2fs_bsize)
-			bp->b_flags |= B_CLUSTEROK;
+		if (buf_size(bp) == fs->e2fs_bsize) {
+			int32_t flag = buf_flags(bp);
+			flag |= B_CLUSTEROK;
+			buf_setflags(bp, flag);
+		}
 		if (flags & IO_SYNC)
-			bwrite(bp);
+			buf_bwrite(bp);
 		else if (DOINGASYNC(ovp))
-			bdwrite(bp);
+			buf_bdwrite(bp);
 		else
-			bawrite(bp);
+			buf_bawrite(bp);
 		oip->i_flag |= IN_CHANGE | IN_UPDATE;
 		return (ext2_update(ovp, !DOINGASYNC(ovp)));
 	}
@@ -200,16 +217,19 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 			return (error);
 		oip->i_size = length;
 		size = blksize(fs, oip, lbn);
-		bzero((char *)bp->b_data + offset, (u_int)(size - offset));
-		allocbuf(bp, size);
-		if (bp->b_bufsize == fs->e2fs_bsize)
-			bp->b_flags |= B_CLUSTEROK;
+		bzero((char *)buf_dataptr(bp) + offset, (u_int)(size - offset));
+		buf_setsize(bp, size);
+		if (buf_size(bp) == fs->e2fs_bsize) {
+			int32_t flag = buf_flags(bp);
+			flag |= B_CLUSTEROK;
+			buf_setflags(bp, flag);
+		}
 		if (flags & IO_SYNC)
-			bwrite(bp);
+			buf_bwrite(bp);
 		else if (DOINGASYNC(ovp))
-			bdwrite(bp);
+			buf_bdwrite(bp);
 		else
-			bawrite(bp);
+			buf_bawrite(bp);
 	}
 	/*
 	 * Calculate index into inode's block list of
@@ -221,7 +241,7 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 	lastiblock[SINGLE] = lastblock - NDADDR;
 	lastiblock[DOUBLE] = lastiblock[SINGLE] - NINDIR(fs);
 	lastiblock[TRIPLE] = lastiblock[DOUBLE] - NINDIR(fs) * NINDIR(fs);
-	nblocks = btodb(fs->e2fs_bsize);
+	nblocks = btodb(fs->e2fs_bsize, DEV_BSHIFT);
 	/*
 	 * Update file and block pointers on disk before we start freeing
 	 * blocks.  If we crash before free'ing blocks below, the blocks
@@ -258,6 +278,7 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 		oip->i_ib[i] = oldblks[NDADDR + i];
 	}
 	oip->i_size = osize;
+	//error = ubc_msync(ovp, length, (int)fs->e2fs_bsize, NULL, UBC_PUSHDIRTY | UBC_SYNC | UBC_INVALIDATE);
 	error = vtruncbuf(ovp, cred, length, (int)fs->e2fs_bsize);
 	if (error && (allerror == 0))
 		allerror = error;
@@ -299,7 +320,7 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 		oip->i_db[i] = 0;
 		bsize = blksize(fs, oip, i);
 		ext2_blkfree(oip, bn, bsize);
-		blocksreleased += btodb(bsize);
+		blocksreleased += btodb(bsize, DEV_BSHIFT);
 	}
 	if (lastblock < 0)
 		goto done;
@@ -329,7 +350,7 @@ ext2_truncate(struct vnode *vp, off_t length, int flags, struct ucred *cred,
 			 */
 			bn += numfrags(fs, newspace);
 			ext2_blkfree(oip, bn, oldspace - newspace);
-			blocksreleased += btodb(oldspace - newspace);
+			blocksreleased += btodb(oldspace - newspace, DEV_BSHIFT);
 		}
 	}
 done:
@@ -392,7 +413,7 @@ ext2_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
 	last = lastbn;
 	if (lastbn > 0)
 		last /= factor;
-	nblocks = btodb(fs->e2fs_bsize);
+	nblocks = btodb(fs->e2fs_bsize, DEV_BSHIFT);
 	/*
 	 * Get buffer of block pointers, zero those entries corresponding
 	 * to blocks to be free'd, and update on disk copy first.  Since
@@ -402,34 +423,40 @@ ext2_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
 	 * explicitly instead of letting bread do everything for us.
 	 */
 	vp = ITOV(ip);
-	bp = getblk(vp, lbn, (int)fs->e2fs_bsize, 0, 0, 0);
-	if ((bp->b_flags & (B_DONE | B_DELWRI)) == 0) {
-		bp->b_iocmd = BIO_READ;
-		if (bp->b_bcount > bp->b_bufsize)
+	vnode_t devvp = ip->i_devvp;
+	bp = buf_getblk(vp, lbn, (int)fs->e2fs_bsize, 0, 0, BLK_META);
+	if (0 == buf_valid(bp)) {
+		// cache miss
+		buf_setflags(bp, B_READ);
+		if (buf_count(bp) > buf_size(bp))
 			panic("ext2_indirtrunc: bad buffer size");
-		bp->b_blkno = dbn;
+		buf_setblkno(bp, dbn);
 		vfs_busy_pages(bp, 0);
-		bp->b_iooffset = dbtob(bp->b_blkno);
-		bstrategy(bp);
-		error = bufwait(bp);
+		buf_setdirtyoff(bp, dbtob(buf_blkno(bp), DEV_BSHIFT));
+		struct vnop_strategy_args vsargs;
+		vsargs.a_desc = &vnop_strategy_desc;
+		vsargs.a_bp = bp;
+		buf_strategy(devvp, &vsargs);
+		error = buf_biowait(bp);
 	}
 	if (error) {
-		brelse(bp);
+		buf_brelse(bp);
 		*countp = 0;
 		return (error);
 	}
 
-	bap = (e2fs_daddr_t *)bp->b_data;
-	copy = malloc(fs->e2fs_bsize, M_TEMP, M_WAITOK);
+	bap = (void*)buf_dataptr(bp);
+	copy = _MALLOC(fs->e2fs_bsize, M_TEMP, M_WAITOK);
 	bcopy((caddr_t)bap, (caddr_t)copy, (u_int)fs->e2fs_bsize);
 	bzero((caddr_t)&bap[last + 1],
 	  (NINDIR(fs) - (last + 1)) * sizeof(e2fs_daddr_t));
-	if (last == -1)
-		bp->b_flags |= B_INVAL;
+	if (last == -1) {
+		//bp->b_flags |= B_INVAL;
+	}
 	if (DOINGASYNC(vp)) {
-		bdwrite(bp);
+		buf_bdwrite(bp);
 	} else {
-		error = bwrite(bp);
+		error = buf_bwrite(bp);
 		if (error)
 			allerror = error;
 	}
@@ -466,7 +493,7 @@ ext2_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
 			blocksreleased += blkcount;
 		}
 	}
-	free(copy, M_TEMP);
+	FREE(copy, M_TEMP);
 	*countp = blocksreleased;
 	return (allerror);
 }
@@ -475,11 +502,11 @@ ext2_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
  *	discard preallocated blocks
  */
 int
-ext2_inactive(struct vop_inactive_args *ap)
+ext2_inactive(struct vnop_inactive_args *ap)
 {
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
-	struct thread *td = ap->a_td;
+	struct thread *td = vfs_context_proc(ap->a_context);
 	int mode, error = 0;
 
 	/*
@@ -503,7 +530,7 @@ out:
 	 * so that it can be reused immediately.
 	 */
 	if (ip->i_mode == 0)
-		vrecycle(vp);
+		vnode_recycle(vp);
 	return (error);
 }
 
@@ -511,7 +538,7 @@ out:
  * Reclaim an inode so that it can be used for other purposes.
  */
 int
-ext2_reclaim(struct vop_reclaim_args *ap)
+ext2_reclaim(struct vnop_reclaim_args *ap)
 {
 	struct inode *ip;
 	struct vnode *vp = ap->a_vp;
@@ -521,9 +548,18 @@ ext2_reclaim(struct vop_reclaim_args *ap)
 		ip->i_flag |= IN_MODIFIED;
 		ext2_update(vp, 0);
 	}
-	vfs_hash_remove(vp);
-	free(vp->v_data, M_EXT2NODE);
-	vp->v_data = 0;
-	vnode_destroy_vobject(vp);
+	
+	/*
+	 * Purge old data structures associated with the inode.
+	 */
+	if (ip->i_devvp) {
+		vnode_t tvp = ip->i_devvp;
+		ip->i_devvp = NULLVP;
+		vnode_rele(tvp);
+	}
+	vnode_clearfsnode(vp);
+	vnode_removefsref(vp);
+	
+	FREE(ip, M_EXT2NODE);
 	return (0);
 }

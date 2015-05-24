@@ -65,7 +65,7 @@
 #include <sys/quota.h>
 
 #include "kern/ext2_lockf.h"
-#include "gnu/ext2fs/inode.h"
+#include "fs/ext2fs/inode.h"
 //#include <ufs/ufs/ufs_extern.h>
 
 /*

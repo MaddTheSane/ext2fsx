@@ -152,17 +152,17 @@ ext4_ext_find_extent(struct m_ext2fs *fs, struct inode *ip,
 		    path->ep_index->ei_leaf_lo;
 		size = blksize(fs, ip, nblk);
 		if (path->ep_bp != NULL) {
-			brelse(path->ep_bp);
+			buf_brelse(path->ep_bp);
 			path->ep_bp = NULL;
 		}
-		error = bread(ip->i_devvp, fsbtodb(fs, nblk), size, NOCRED,
+		error = buf_meta_bread(ip->i_devvp, fsbtodb(fs, nblk), size, NOCRED,
 			    &path->ep_bp);
 		if (error) {
-			brelse(path->ep_bp);
+			buf_brelse(path->ep_bp);
 			path->ep_bp = NULL;
 			return (NULL);
 		}
-		ehp = (struct ext4_extent_header *)path->ep_bp->b_data;
+		ehp = (struct ext4_extent_header *) buf_dataptr(path->ep_bp);
 		path->ep_header = ehp;
 	}
 

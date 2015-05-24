@@ -68,11 +68,12 @@ static const char whatid[] __attribute__ ((unused)) =
 
 #include "ext2_apple.h"
 
-#include <gnu/ext2fs/ext2_fs.h>
-#include <gnu/ext2fs/inode.h>
-#include <gnu/ext2fs/ext2_extern.h>
-#include <gnu/ext2fs/ext2_fs_sb.h>
-#include <gnu/ext2fs/fs.h>
+#include <fs/ext2fs/fs.h>
+#include <fs/ext2fs/inode.h>
+#include <fs/ext2fs/ext2fs.h>
+#include <fs/ext2fs/inode.h>
+#include <fs/ext2fs/fs.h>
+#include <fs/ext2fs/ext2_extern.h>
 #include "ext2_apple.h"
 
 #define	BLKSIZE(a, b, c)	blksize(a, b, c)

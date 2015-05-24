@@ -221,8 +221,8 @@ ext2_reallocblks(struct vop_reallocblks_args *ap)
 		soff = start_lbn;
 	} else {
 		idp = &start_ap[start_lvl - 1];
-		if (bread(vp, idp->in_lbn, (int)fs->e2fs_bsize, NOCRED, &sbp)) {
-			brelse(sbp);
+		if (buf_meta_bread(vp, idp->in_lbn, (int)fs->e2fs_bsize, NOCRED, &sbp)) {
+			buf_brelse(sbp);
 			return (ENOSPC);
 		}
 		sbap = (u_int *)sbp->b_data;
@@ -239,7 +239,7 @@ ext2_reallocblks(struct vop_reallocblks_args *ap)
 			panic("ext2_reallocblks: start == end");
 #endif
 		ssize = len - (idp->in_off + 1);
-		if (bread(vp, idp->in_lbn, (int)fs->e2fs_bsize, NOCRED, &ebp))
+		if (buf_meta_bread(vp, idp->in_lbn, (int)fs->e2fs_bsize, NOCRED, &ebp))
 			goto fail;
 		ebap = (u_int *)ebp->b_data;
 	}
@@ -298,9 +298,9 @@ ext2_reallocblks(struct vop_reallocblks_args *ap)
 	 */
 	if (sbap != &ip->i_db[0]) {
 		if (doasyncfree)
-			bdwrite(sbp);
+			buf_bdwrite(sbp);
 		else
-			bwrite(sbp);
+			buf_bwrite(sbp);
 	} else {
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 		if (!doasyncfree)
@@ -308,9 +308,9 @@ ext2_reallocblks(struct vop_reallocblks_args *ap)
 	}
 	if (ssize < len) {
 		if (doasyncfree)
-			bdwrite(ebp);
+			buf_bdwrite(ebp);
 		else
-			bwrite(ebp);
+			buf_bwrite(ebp);
 	}
 	/*
 	 * Last, free the old blocks and assign the new blocks to the buffers.
@@ -333,9 +333,9 @@ ext2_reallocblks(struct vop_reallocblks_args *ap)
 
 fail:
 	if (ssize < len)
-		brelse(ebp);
+		buf_brelse(ebp);
 	if (sbap != &ip->i_db[0])
-		brelse(sbp);
+		buf_brelse(sbp);
 	return (ENOSPC);
 }
 
@@ -651,11 +651,11 @@ ext2_alloccg(struct inode *ip, int cg, daddr_t bpref, int size)
 	if (fs->e2fs_gd[cg].ext2bgd_nbfree == 0)
 		return (0);
 	EXT2_UNLOCK(ump);
-	error = bread(ip->i_devvp, fsbtodb(fs,
+	error = buf_meta_bread(ip->i_devvp, fsbtodb(fs,
 		fs->e2fs_gd[cg].ext2bgd_b_bitmap),
 		(int)fs->e2fs_bsize, NOCRED, &bp);
 	if (error) {
-		brelse(bp);
+		buf_brelse(bp);
 		EXT2_LOCK(ump);
 		return (0);
 	}
@@ -664,7 +664,7 @@ ext2_alloccg(struct inode *ip, int cg, daddr_t bpref, int size)
 		 * Another thread allocated the last block in this
 		 * group while we were waiting for the buffer.
 		 */
-		brelse(bp);
+		buf_brelse(bp);
 		EXT2_LOCK(ump);
 		return (0);
 	}
@@ -742,7 +742,7 @@ retry:
 
 	bno = ext2_mapsearch(fs, bbp, bpref);
 	if (bno < 0){
-		brelse(bp);
+		buf_brelse(bp);
 		EXT2_LOCK(ump);
 		return (0);
 	}
@@ -761,7 +761,7 @@ gotit:
 	fs->e2fs_gd[cg].ext2bgd_nbfree--;
 	fs->e2fs_fmod = 1;
 	EXT2_UNLOCK(ump);
-	bdwrite(bp);
+	buf_bdwrite(bp);
 	return (cg * fs->e2fs->e2fs_fpg + fs->e2fs->e2fs_first_dblock + bno);
 }
 
@@ -786,7 +786,7 @@ ext2_clusteralloc(struct inode *ip, int cg, daddr_t bpref, int len)
 		return (0);
 
 	EXT2_UNLOCK(ump);
-	error = bread(ip->i_devvp,
+	error = buf_meta_bread(ip->i_devvp,
 	    fsbtodb(fs, fs->e2fs_gd[cg].ext2bgd_b_bitmap),
 	    (int)fs->e2fs_bsize, NOCRED, &bp);
 	if (error)
@@ -863,13 +863,13 @@ ext2_clusteralloc(struct inode *ip, int cg, daddr_t bpref, int len)
 	fs->e2fs_fmod = 1;
 	EXT2_UNLOCK(ump);
 
-	bdwrite(bp);
+	buf_bdwrite(bp);
 	return (cg * fs->e2fs->e2fs_fpg + fs->e2fs->e2fs_first_dblock + bno);
 
 fail_lock:
 	EXT2_LOCK(ump);
 fail:
-	brelse(bp);
+	buf_brelse(bp);
 	return (0);
 }
 
@@ -895,11 +895,11 @@ ext2_nodealloccg(struct inode *ip, int cg, daddr_t ipref, int mode)
 	if (fs->e2fs_gd[cg].ext2bgd_nifree == 0)
 		return (0);
 	EXT2_UNLOCK(ump);	
-	error = bread(ip->i_devvp, fsbtodb(fs,
+	error = buf_meta_bread(ip->i_devvp, fsbtodb(fs,
 		fs->e2fs_gd[cg].ext2bgd_i_bitmap),
 		(int)fs->e2fs_bsize, NOCRED, &bp);
 	if (error) {
-		brelse(bp);
+		buf_brelse(bp);
 		EXT2_LOCK(ump);
 		return (0);
 	}
@@ -908,7 +908,7 @@ ext2_nodealloccg(struct inode *ip, int cg, daddr_t ipref, int mode)
 		 * Another thread allocated the last i-node in this
 		 * group while we were waiting for the buffer.
 		 */
-		brelse(bp);
+		buf_brelse(bp);
 		EXT2_LOCK(ump);
 		return (0);
 	}
@@ -944,7 +944,7 @@ gotit:
 		fs->e2fs_total_dir++;
 	}
 	EXT2_UNLOCK(ump);
-	bdwrite(bp);
+	buf_bdwrite(bp);
 	return (cg * fs->e2fs->e2fs_ipg + ipref +1);
 }
 
@@ -970,11 +970,11 @@ ext2_blkfree(struct inode *ip, e4fs_daddr_t bno, long size)
 		ext2_fserr(fs, ip->i_uid, "bad block");
 		return;
 	}
-	error = bread(ip->i_devvp,
+	error = buf_meta_bread(ip->i_devvp,
 		fsbtodb(fs, fs->e2fs_gd[cg].ext2bgd_b_bitmap),
 		(int)fs->e2fs_bsize, NOCRED, &bp);
 	if (error) {
-		brelse(bp);
+		buf_brelse(bp);
 		return;
 	}
 	bbp = (char *)bp->b_data;
@@ -991,7 +991,7 @@ ext2_blkfree(struct inode *ip, e4fs_daddr_t bno, long size)
 	fs->e2fs_gd[cg].ext2bgd_nbfree++;
 	fs->e2fs_fmod = 1;
 	EXT2_UNLOCK(ump);
-	bdwrite(bp);
+	buf_bdwrite(bp);
 }
 
 /*
@@ -1016,11 +1016,11 @@ ext2_vfree(struct vnode *pvp, ino_t ino, int mode)
 		    pip->i_devvp, (uintmax_t)ino, fs->e2fs_fsmnt);
 
 	cg = ino_to_cg(fs, ino);
-	error = bread(pip->i_devvp,
+	error = buf_meta_bread(pip->i_devvp,
 		fsbtodb(fs, fs->e2fs_gd[cg].ext2bgd_i_bitmap),
 		(int)fs->e2fs_bsize, NOCRED, &bp);
 	if (error) {
-		brelse(bp);
+		buf_brelse(bp);
 		return (0);
 	}
 	ibp = (char *)bp->b_data;
@@ -1041,7 +1041,7 @@ ext2_vfree(struct vnode *pvp, ino_t ino, int mode)
 	}
 	fs->e2fs_fmod = 1;
 	EXT2_UNLOCK(ump);
-	bdwrite(bp);
+	buf_bdwrite(bp);
 	return (0);
 }
 

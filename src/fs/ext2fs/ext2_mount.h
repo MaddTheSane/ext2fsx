@@ -53,7 +53,7 @@ struct ext2mount {
 	u_long	um_bptrtodb;			/* indir ptr to disk block */
 	u_long	um_seqinc;			/* inc between seq blocks */
 
-	struct mtx um_lock;			/* Protects ext2mount & fs */
+	lck_mtx_t *um_lock;			/* Protects ext2mount & fs */
 
 	struct g_consumer *um_cp;
 	struct bufobj *um_bo;

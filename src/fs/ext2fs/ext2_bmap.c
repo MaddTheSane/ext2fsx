@@ -232,7 +232,7 @@ ext2_bmaparray(struct vnode *vp, daddr_t bn, daddr_t *bnp, int *runp, int *runb)
 			curthread->td_ru.ru_inblock++;
 			error = bufwait(bp);
 			if (error) {
-				brelse(bp);
+				buf_brelse(bp);
 				return (error);
 			}
 		}

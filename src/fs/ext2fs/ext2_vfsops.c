@@ -375,20 +375,20 @@ compute_sb_data(struct vnode *devvp, struct ext2fs *es,
 	if(fs->e2fs_bsize > SBSIZE)
 		logic_sb_block = 0;
 	for (i = 0; i < db_count; i++) {
-		error = bread(devvp ,
+		error = buf_meta_bread(devvp ,
 			 fsbtodb(fs, logic_sb_block + i + 1 ),
 			fs->e2fs_bsize, NOCRED, &bp);
 		if (error) {
 			free(fs->e2fs_contigdirs, M_EXT2MNT);
 			free(fs->e2fs_gd, M_EXT2MNT);
-			brelse(bp);
+			buf_brelse(bp);
 			return (error);
 		}
 		e2fs_cgload((struct ext2_gd *)bp->b_data,
 		    &fs->e2fs_gd[
 			i * fs->e2fs_bsize / sizeof(struct ext2_gd)],
 		    fs->e2fs_bsize);
-		brelse(bp);
+		buf_brelse(bp);
 		bp = NULL;
 	}
 	/* Initialization for the ext2 Orlov allocator variant. */
@@ -445,25 +445,25 @@ ext2_reload(struct mount *mp, struct thread *td)
 	 * Step 2: re-read superblock from disk.
 	 * constants have been adjusted for ext2
 	 */
-	if ((error = bread(devvp, SBLOCK, SBSIZE, NOCRED, &bp)) != 0)
+	if ((error = buf_meta_bread(devvp, SBLOCK, SBSIZE, NOCRED, &bp)) != 0)
 		return (error);
 	es = (struct ext2fs *)bp->b_data;
 	if (ext2_check_sb_compat(es, devvp->v_rdev, 0) != 0) {
-		brelse(bp);
+		buf_brelse(bp);
 		return (EIO);		/* XXX needs translation */
 	}
 	fs = VFSTOEXT2(mp)->um_e2fs;
 	bcopy(bp->b_data, fs->e2fs, sizeof(struct ext2fs));
 
 	if((error = compute_sb_data(devvp, es, fs)) != 0) {
-		brelse(bp);
+		buf_brelse(bp);
 		return (error);
 	}
 #ifdef UNKLAR
 	if (fs->fs_sbsize < SBSIZE)
 		bp->b_flags |= B_INVAL;
 #endif
-	brelse(bp);
+	buf_brelse(bp);
 
 	/*
 	 * Step 3: invalidate all cluster summary information.
@@ -494,7 +494,7 @@ loop:
 		 * Step 5: re-read inode data for all active vnodes.
 		 */
 		ip = VTOI(vp);
-		error = bread(devvp, fsbtodb(fs, ino_to_fsba(fs, ip->i_number)),
+		error = buf_meta_bread(devvp, fsbtodb(fs, ino_to_fsba(fs, ip->i_number)),
 		    (int)fs->e2fs_bsize, NOCRED, &bp);
 		if (error) {
 			VOP_UNLOCK(vp, 0);
@@ -504,7 +504,7 @@ loop:
 		}
 		ext2_ei2i((struct ext2fs_dinode *) ((char *)bp->b_data +
 		    EXT2_INODE_SIZE(fs) * ino_to_fsbo(fs, ip->i_number)), ip);
-		brelse(bp);
+		buf_brelse(bp);
 		VOP_UNLOCK(vp, 0);
 		vrele(vp);
 	}
@@ -563,7 +563,7 @@ ext2_mountfs(struct vnode *devvp, struct mount *mp)
 
 	bp = NULL;
 	ump = NULL;
-	if ((error = bread(devvp, SBLOCK, SBSIZE, NOCRED, &bp)) != 0)
+	if ((error = buf_meta_bread(devvp, SBLOCK, SBSIZE, NOCRED, &bp)) != 0)
 		goto out;
 	es = (struct ext2fs *)bp->b_data;
 	if (ext2_check_sb_compat(es, dev, ronly) != 0) {
@@ -621,7 +621,7 @@ ext2_mountfs(struct vnode *devvp, struct mount *mp)
 		}
 	}
 
-	brelse(bp);
+	buf_brelse(bp);
 	bp = NULL;
 	fs = ump->um_e2fs;
 	fs->e2fs_ronly = ronly;	/* ronly is set according to mnt_flags */
@@ -667,7 +667,7 @@ ext2_mountfs(struct vnode *devvp, struct mount *mp)
 	return (0);
 out:
 	if (bp)
-		brelse(bp);
+		buf_brelse(bp);
 	if (cp != NULL) {
 		DROP_GIANT();
 		g_topology_lock();
@@ -926,7 +926,7 @@ ext2_vget(struct mount *mp, ino_t ino, int flags, struct vnode **vpp)
 		return (error);
 
 	/* Read in the disk contents for the inode, copy into the inode. */
-	if ((error = bread(ump->um_devvp, fsbtodb(fs, ino_to_fsba(fs, ino)),
+	if ((error = buf_meta_bread(ump->um_devvp, fsbtodb(fs, ino_to_fsba(fs, ino)),
 	    (int)fs->e2fs_bsize, NOCRED, &bp)) != 0) {
 		/*
 		 * The inode does not contain anything useful, so it would
@@ -934,7 +934,7 @@ ext2_vget(struct mount *mp, ino_t ino, int flags, struct vnode **vpp)
 		 * still zero, it will be unlinked and returned to the free
 		 * list by vput().
 		 */
-		brelse(bp);
+		buf_brelse(bp);
 		vput(vp);
 		*vpp = NULL;
 		return (error);
@@ -1048,9 +1048,9 @@ ext2_sbupdate(struct ext2mount *mp, int waitfor)
 	bp = getblk(mp->um_devvp, SBLOCK, SBSIZE, 0, 0, 0);
 	bcopy((caddr_t)es, bp->b_data, (u_int)sizeof(struct ext2fs));
 	if (waitfor == MNT_WAIT)
-		error = bwrite(bp);
+		error = buf_bwrite(bp);
 	else
-		bawrite(bp);
+		buf_bawrite(bp);
 
 	/*
 	 * The buffers for group descriptors, inode bitmaps and block bitmaps
@@ -1075,9 +1075,9 @@ ext2_cgupdate(struct ext2mount *mp, int waitfor)
 		    i * fs->e2fs_bsize / sizeof(struct ext2_gd)],
 		    (struct ext2_gd *)bp->b_data, fs->e2fs_bsize);
 		if (waitfor == MNT_WAIT)
-			error = bwrite(bp);
+			error = buf_bwrite(bp);
 		else
-			bawrite(bp);
+			buf_bawrite(bp);
 	}
 
 	if (!allerror && error)

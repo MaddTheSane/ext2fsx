@@ -322,7 +322,6 @@
 		55F6453B15377F2900F6E73D /* quotaio_tree.h in Headers */ = {isa = PBXBuildFile; fileRef = 55F644E51537608E00F6E73D /* quotaio_tree.h */; };
 		55F6453C15377F2900F6E73D /* quotaio_v2.h in Headers */ = {isa = PBXBuildFile; fileRef = 55F644E81537608E00F6E73D /* quotaio_v2.h */; };
 		55F6453D15377F6400F6E73D /* blkidP.h in Headers */ = {isa = PBXBuildFile; fileRef = 55FB7F7413C15EBF006C2DAD /* blkidP.h */; };
-		D32B1F8E09946A3B001A78A0 /* ext2_apple.h in Headers */ = {isa = PBXBuildFile; fileRef = D3B4645704099F8700A80164 /* ext2_apple.h */; };
 		D32B203D099470A7001A78A0 /* kext_load.c in Sources */ = {isa = PBXBuildFile; fileRef = D3D485770405AC0900A80164 /* kext_load.c */; };
 		D32B2040099470A7001A78A0 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D32E761D05FD2919002928A8 /* SystemConfiguration.framework */; };
 		D32B208009947574001A78A0 /* getmntopts.c in Sources */ = {isa = PBXBuildFile; fileRef = D32B207F09947574001A78A0 /* getmntopts.c */; };
@@ -789,6 +788,7 @@
 		5528A0CA153F1FDE00765DA1 /* mke2fs.conf.5 */ = {isa = PBXFileReference; lastKnownFileType = text; path = mke2fs.conf.5; sourceTree = "<group>"; };
 		5577045713C3CCB400457317 /* libcom_err.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcom_err.dylib; path = usr/lib/libcom_err.dylib; sourceTree = SDKROOT; };
 		5577058E13C3CD5600457317 /* libss.1.0.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libss.1.0.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		55B126AB1B11578D0013B12A /* Kernel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kernel.framework; path = System/Library/Frameworks/Kernel.framework; sourceTree = SDKROOT; };
 		55DD55B61B111DE300452822 /* ext2_alloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ext2_alloc.c; sourceTree = "<group>"; };
 		55DD55B71B111DE300452822 /* ext2_balloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ext2_balloc.c; sourceTree = "<group>"; };
 		55DD55B81B111DE300452822 /* ext2_bmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ext2_bmap.c; sourceTree = "<group>"; };
@@ -2067,7 +2067,6 @@
 		D387FCA20595597500C31A93 /* super.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = super.c; sourceTree = "<group>"; };
 		D38A5F0806711DDB00E9E666 /* efssmartd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = efssmartd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3A9B8150582E26500B93FC7 /* mount_extmgr.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = mount_extmgr.c; sourceTree = "<group>"; };
-		D3B4645704099F8700A80164 /* ext2_apple.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ext2_apple.h; path = src/ext2_apple.h; sourceTree = "<group>"; };
 		D3D485770405AC0900A80164 /* kext_load.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = kext_load.c; path = src/kext_load.c; sourceTree = "<group>"; };
 		D3D485870405C3B900A80164 /* ext2util.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ext2util.c; path = src/ext2util.c; sourceTree = "<group>"; };
 		D3D4AF27057913CB00A80164 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -2253,7 +2252,6 @@
 			isa = PBXGroup;
 			children = (
 				55FB784713C15EBB006C2DAD /* src */,
-				D3B4645704099F8700A80164 /* ext2_apple.h */,
 				D3D485770405AC0900A80164 /* kext_load.c */,
 				D33C06890418779900A80164 /* newfs_ext2.c */,
 				D376F3C6040DF69900A80164 /* fs_bndl */,
@@ -2306,6 +2304,7 @@
 		5577049413C3CCF200457317 /* Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				55B126AB1B11578D0013B12A /* Kernel.framework */,
 				D376F3CD040E088100A80164 /* CoreFoundation.framework */,
 				D32E761D05FD2919002928A8 /* SystemConfiguration.framework */,
 				D36725FE057BB78100A80164 /* DiskArbitration.framework */,
@@ -4938,7 +4937,6 @@
 				55DD55D01B111DE300452822 /* ext2_extern.h in Headers */,
 				55DD55D41B111DE300452822 /* ext2_mount.h in Headers */,
 				55DD55CC1B111DE300452822 /* ext2_dinode.h in Headers */,
-				D32B1F8E09946A3B001A78A0 /* ext2_apple.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6583,6 +6581,7 @@
 					DIAGNOSTIC,
 					DX_DEBUG,
 					EXT2FS_TRACE,
+					__APPLE_API_UNSTABLE,
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
@@ -6612,6 +6611,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					_KERNEL,
 					OSX,
+					__APPLE_API_UNSTABLE,
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (

@@ -40,7 +40,7 @@
 
 #include <sys/proc.h>
 #include <sys/systm.h>
-#include <sys/bio.h>
+//#include <sys/bio.h>
 #include <sys/buf.h>
 #include <sys/lock.h>
 #include <sys/ucred.h>
@@ -99,32 +99,32 @@ ext2_blkatoff(struct vnode *vp, off_t offset, char **res, struct buf **bpp)
 	    (ep->e_start_lo | (daddr_t)ep->e_start_hi << 32);
 
 	if (path.ep_bp != NULL) {
-		brelse(path.ep_bp);
+		buf_brelse(path.ep_bp);
 		path.ep_bp = NULL;
 	}
-	error = bread(ip->i_devvp, fsbtodb(fs, newblk), bsize, NOCRED, &bp);
+	error = buf_meta_bread(ip->i_devvp, fsbtodb(fs, newblk), bsize, NOCRED, &bp);
 	if (error != 0) {
-		brelse(bp);
+		buf_brelse(bp);
 		return (error);
 	}
 	if (res)
-		*res = (char *)bp->b_data + blkoff(fs, offset);
+		*res = (char*)buf_dataptr(bp) + blkoff(fs, offset);
 	/*
 	 * If IN_E4EXTENTS is enabled we would get a wrong offset so
 	 * reset b_offset here.
 	 */
-	bp->b_offset = lbn * bsize;
+	buf_setdirtyoff(bp, lbn * bsize);
 	*bpp = bp;
 	return (0);
 
 normal:
 	if (*bpp == NULL) {
-		if ((error = bread(vp, lbn, bsize, NOCRED, &bp)) != 0) {
-			brelse(bp);
+		if ((error = buf_meta_bread(vp, lbn, bsize, NOCRED, &bp)) != 0) {
+			buf_brelse(bp);
 			return (error);
 		}
 		if (res)
-			*res = (char *)bp->b_data + blkoff(fs, offset);
+			*res = (char *)buf_dataptr(bp) + blkoff(fs, offset);
 		*bpp = bp;
 	}
 	return (0);

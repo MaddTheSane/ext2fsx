@@ -65,16 +65,15 @@
 #include <sys/conf.h>
 #include <sys/file.h>
 
-#include <kern/vm.h>
-//#include <vm/vm.h>
-#include <vm/vm_param.h>
-#include <vm/vm_extern.h>
-#include <vm/vm_object.h>
-#include <vm/vm_page.h>
-#include <vm/vm_pager.h>
-#include <vm/vnode_pager.h>
+#include <sys/vm.h>
+//#include <vm/vm_param.h>
+//#include <vm/vm_extern.h>
+//#include <vm/vm_object.h>
+//#include <vm/vm_page.h>
+//#include <vm/vm_pager.h>
+//#include <vm/vnode_pager.h>
 
-#include "opt_directio.h"
+//#include "opt_directio.h"
 
 #include <ufs/ufs/dir.h>
 
@@ -1682,19 +1681,19 @@ ext2_ind_read(struct vop_read_args *ap)
 			xfersize = bytesinfile;
 
 		if (lblktosize(fs, nextlbn) >= ip->i_size)
-			error = bread(vp, lbn, size, NOCRED, &bp);
+			error = buf_meta_bread(vp, lbn, size, NOCRED, &bp);
 		else if ((vp->v_mount->mnt_flag & MNT_NOCLUSTERR) == 0) {
 			error = cluster_read(vp, ip->i_size, lbn, size,
 			    NOCRED, blkoffset + uio->uio_resid, seqcount,
 			    0, &bp);
 		} else if (seqcount > 1) {
 			u_int nextsize = blksize(fs, ip, nextlbn);
-			error = breadn(vp, lbn,
+			error = buf_meta_breadn(vp, lbn,
 			    size, &nextlbn, &nextsize, 1, NOCRED, &bp);
 		} else
-			error = bread(vp, lbn, size, NOCRED, &bp);
+			error = buf_meta_bread(vp, lbn, size, NOCRED, &bp);
 		if (error) {
-			brelse(bp);
+			buf_brelse(bp);
 			bp = NULL;
 			break;
 		}
@@ -1734,7 +1733,7 @@ ext2_ind_read(struct vop_read_args *ap)
 			 * the data.
 			 */
 			bp->b_flags |= B_RELBUF;
-			brelse(bp);
+			buf_brelse(bp);
 		} else {
 			/*
 			 * Otherwise let whoever
@@ -1755,7 +1754,7 @@ ext2_ind_read(struct vop_read_args *ap)
 	if (bp != NULL) {
 		if (ioflag & (IO_VMIO|IO_DIRECT)) {
 			bp->b_flags |= B_RELBUF;
-			brelse(bp);
+			buf_brelse(bp);
 		} else {
 			bqrelse(bp);
 		}
@@ -1841,7 +1840,7 @@ ext4_ext_read(struct vop_read_args *ap)
 			    (daddr_t)ep->e_start_hi << 32);
 
 			if (path.ep_bp != NULL) {
-				brelse(path.ep_bp);
+				buf_brelse(path.ep_bp);
 				path.ep_bp = NULL;
 			}
 			break;
@@ -1859,9 +1858,9 @@ ext4_ext_read(struct vop_read_args *ap)
 			panic("%s: invalid cache type", __func__);
 		}
 
-		error = bread(ip->i_devvp, fsbtodb(fs, newblk), size, NOCRED, &bp);
+		error = buf_meta_bread(ip->i_devvp, fsbtodb(fs, newblk), size, NOCRED, &bp);
 		if (error) {
-			brelse(bp);
+			buf_brelse(bp);
 			return (error);
 		}
 
@@ -2014,25 +2013,25 @@ ext2_write(struct vop_write_args *ap)
 		 * or a delayed write (if not).
 		 */
 		if (ioflag & IO_SYNC) {
-			(void)bwrite(bp);
+			(void)buf_bwrite(bp);
 		} else if (vm_page_count_severe() ||
 		    buf_dirty_count_severe() ||
 		    (ioflag & IO_ASYNC)) {
 			bp->b_flags |= B_CLUSTEROK;
-			bawrite(bp);
+			buf_bawrite(bp);
 		} else if (xfersize + blkoffset == fs->e2fs_fsize) {
 			if ((vp->v_mount->mnt_flag & MNT_NOCLUSTERW) == 0) {
 				bp->b_flags |= B_CLUSTEROK;
 				cluster_write(vp, bp, ip->i_size, seqcount, 0);
 			} else {
-				bawrite(bp);
+				buf_bawrite(bp);
 			}
 		} else if (ioflag & IO_DIRECT) {
 			bp->b_flags |= B_CLUSTEROK;
-			bawrite(bp);
+			buf_bawrite(bp);
 		} else {
 			bp->b_flags |= B_CLUSTEROK;
-			bdwrite(bp);
+			buf_bdwrite(bp);
 		}
 		if (error || xfersize == 0)
 			break;
