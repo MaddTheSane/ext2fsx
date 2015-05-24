@@ -138,37 +138,37 @@ ext2_readdir(struct vnop_readdir_args *ap)
 	int DIRBLKSIZ = VTOI(ap->a_vp)->i_e2fs->e2fs_bsize;
 	int error;
 
-	if (uio->uio_offset < 0)
+	if (uio_offset(uio) < 0)
 		return (EINVAL);
 	ip = VTOI(vp);
 	if (ap->a_ncookies != NULL) {
-		ncookies = uio->uio_resid;
-		if (uio->uio_offset >= ip->i_size)
+		ncookies = uio_resid(uio);
+		if (uio_offset(uio) >= ip->i_size)
 			ncookies = 0;
-		else if (ip->i_size - uio->uio_offset < ncookies)
-			ncookies = ip->i_size - uio->uio_offset;
+		else if (ip->i_size - uio_offset(uio) < ncookies)
+			ncookies = ip->i_size - uio_offset(uio);
 		ncookies = ncookies / (offsetof(struct ext2fs_direct_2,
 		    e2d_namlen) + 4) + 1;
-		cookies = malloc(ncookies * sizeof(*cookies), M_TEMP, M_WAITOK);
+		cookies = _MALLOC(ncookies * sizeof(*cookies), M_TEMP, M_WAITOK);
 		*ap->a_ncookies = ncookies;
 		*ap->a_cookies = cookies;
 	} else {
 		ncookies = 0;
 		cookies = NULL;
 	}
-	offset = startoffset = uio->uio_offset;
-	startresid = uio->uio_resid;
+	offset = startoffset = uio_offset(uio);
+	startresid = uio_resid(uio);
 	error = 0;
-	while (error == 0 && uio->uio_resid > 0 &&
-	    uio->uio_offset < ip->i_size) {
-		error = ext2_blkatoff(vp, uio->uio_offset, NULL, &bp);
+	while (error == 0 && uio_resid(uio) > 0 &&
+	    uio_offset(uio) < ip->i_size) {
+		error = ext2_blkatoff(vp, uio_offset(uio), NULL, &bp);
 		if (error)
 			break;
 		if (bp->b_offset + bp->b_bcount > ip->i_size)
 			readcnt = ip->i_size - bp->b_offset;
 		else
 			readcnt = bp->b_bcount;
-		skipcnt = (size_t)(uio->uio_offset - bp->b_offset) &
+		skipcnt = (size_t)(uio_offset(uio) - bp->b_offset) &
 		    ~(size_t)(DIRBLKSIZ - 1);
 		offset = bp->b_offset + skipcnt;
 		dp = (struct ext2fs_direct_2 *)&bp->b_data[skipcnt];

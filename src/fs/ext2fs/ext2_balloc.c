@@ -98,7 +98,7 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 				buf_brelse(bp);
 				return (error);
 			}
-			bp->b_blkno = fsbtodb(fs, nb);
+			buf_setblkno(bp, fsbtodb(fs, nb));
 			*bpp = bp;
 			return (0);
 		}
@@ -114,7 +114,7 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 					buf_brelse(bp);
 					return (error);
 				}
-				bp->b_blkno = fsbtodb(fs, nb);
+				buf_setblkno(bp, fsbtodb(fs, nb));
 			} else {
 			/* Godmar thinks: this shouldn't happen w/o fragments */
 				printf("nsize %d(%d) > osize %d(%d) nb %d\n", 
@@ -139,11 +139,11 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 			if (error)
 				return (error);
 			bp = getblk(vp, lbn, nsize, 0, 0, 0);
-			bp->b_blkno = fsbtodb(fs, newb);
+			buf_setblkno(bp, fsbtodb(fs, newb));
 			if (flags & BA_CLRBUF)
-				vfs_bio_clrbuf(bp);
+				buf_clear(bp);
 		}
-		ip->i_db[lbn] = dbtofsb(fs, bp->b_blkno);
+		ip->i_db[lbn] = dbtofsb(fs, buf_blkno(bp));
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 		*bpp = bp;
 		return (0);
@@ -172,8 +172,8 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 			return (error);
 		nb = newb;
 		bp = getblk(vp, indirs[1].in_lbn, fs->e2fs_bsize, 0, 0, 0);
-		bp->b_blkno = fsbtodb(fs, newb);
-		vfs_bio_clrbuf(bp);
+		buf_setblkno(bp, fsbtodb(fs, newb));
+		buf_clear(bp);
 		/*
 		 * Write synchronously so that indirect blocks
 		 * never point at garbage.
@@ -195,19 +195,19 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 			buf_brelse(bp);
 			return (error);
 		}
-		bap = (e2fs_daddr_t *)bp->b_data;
+		bap = (e2fs_daddr_t *)buf_dataptr(bp);
 		nb = bap[indirs[i].in_off];
 		if (i == num)
 			break;
 		i += 1;
 		if (nb != 0) {
-			bqrelse(bp);
+			buf_brelse(bp);
 			continue;
 		}
 		EXT2_LOCK(ump);
 		if (pref == 0)
 			pref = ext2_blkpref(ip, lbn, indirs[i].in_off, bap,
-						bp->b_lblkno);
+						buf_blkno(bp));
 		error =  ext2_alloc(ip, lbn, pref, (int)fs->e2fs_bsize, cred, &newb);
 		if (error) {
 			buf_brelse(bp);
@@ -215,8 +215,8 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 		}
 		nb = newb;
 		nbp = getblk(vp, indirs[i].in_lbn, fs->e2fs_bsize, 0, 0, 0);
-		nbp->b_blkno = fsbtodb(fs, nb);
-		vfs_bio_clrbuf(nbp);
+		buf_setblkno(nbp, fsbtodb(fs, nb));
+		buf_clear(nbp);
 		/*
 		 * Write synchronously so that indirect blocks
 		 * never point at garbage.
@@ -256,7 +256,7 @@ ext2_balloc(struct inode *ip, e2fs_lbn_t lbn, int size, struct ucred *cred,
 		nbp = getblk(vp, lbn, fs->e2fs_bsize, 0, 0, 0);
 		nbp->b_blkno = fsbtodb(fs, nb);
 		if (flags & BA_CLRBUF)
-			vfs_bio_clrbuf(nbp);
+			buf_clear(nbp);
 		bap[indirs[i].in_off] = nb;
 		/*
 		 * If required, write synchronously, otherwise use

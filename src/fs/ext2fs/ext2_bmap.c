@@ -153,7 +153,7 @@ ext2_bmaparray(struct vnode *vp, daddr_t bn, daddr_t *bnp, int *runp, int *runb)
 
 	ap = NULL;
 	ip = VTOI(vp);
-	mp = vp->v_mount;
+	mp = vnode_mount(vp);
 	ump = VFSTOEXT2(mp);
 
 	bsize = EXT2_BLOCK_SIZE(ump->um_e2fs);

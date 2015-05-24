@@ -75,8 +75,6 @@
 
 //#include "opt_directio.h"
 
-#include <ufs/ufs/dir.h>
-
 #include <fs/ext2fs/fs.h>
 #include <fs/ext2fs/inode.h>
 #include <fs/ext2fs/ext2_extern.h>

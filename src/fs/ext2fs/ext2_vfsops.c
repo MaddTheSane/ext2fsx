@@ -39,22 +39,22 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/namei.h>
-#include <sys/priv.h>
+//#include <sys/priv.h>
 #include <sys/proc.h>
 #include <sys/kernel.h>
 #include <sys/vnode.h>
 #include <sys/mount.h>
-#include <sys/bio.h>
+#include <sys/ubc.h>
 #include <sys/buf.h>
 #include <sys/conf.h>
-#include <sys/endian.h>
+//#include <sys/endian.h>
 #include <sys/fcntl.h>
 #include <sys/malloc.h>
 #include <sys/stat.h>
-#include <sys/mutex.h>
+#include <sys/sem.h>
 
-#include <geom/geom.h>
-#include <geom/geom_vfs.h>
+//#include <geom/geom.h>
+//#include <geom/geom_vfs.h>
 
 #include <fs/ext2fs/ext2_mount.h>
 #include <fs/ext2fs/inode.h>
@@ -69,30 +69,31 @@ static int	ext2_mountfs(struct vnode *, struct mount *);
 static int	ext2_reload(struct mount *mp, struct thread *td);
 static int	ext2_sbupdate(struct ext2mount *, int);
 static int	ext2_cgupdate(struct ext2mount *, int);
-static vfs_unmount_t		ext2_unmount;
-static vfs_root_t		ext2_root;
-static vfs_statfs_t		ext2_statfs;
-static vfs_sync_t		ext2_sync;
-static vfs_vget_t		ext2_vget;
-static vfs_fhtovp_t		ext2_fhtovp;
-static vfs_mount_t		ext2_mount;
+static int	ext2_unmount(struct mount *mp, int mntflags, vfs_context_t context);
+static int	ext2_root(struct mount *mp, struct vnode **vpp, vfs_context_t context);
+static int	ext2_statfs(struct mount *mp, struct statfs *sbp);
+static int	ext2_sync(struct mount *mp, int waitfor, vfs_context_t context);
+static int	ext2_vget(struct mount *mp, ino64_t ino, struct vnode **vpp, vfs_context_t context);
+static int	ext2_fhtovp(struct mount *mp, int fhlen, unsigned char *fhp, struct vnode **vpp,
+						vfs_context_t context);
+static int	ext2_mount(struct mount *mp, vnode_t devvp, user_addr_t data, vfs_context_t context);
 
 MALLOC_DEFINE(M_EXT2NODE, "ext2_node", "EXT2 vnode private part");
 static MALLOC_DEFINE(M_EXT2MNT, "ext2_mount", "EXT2 mount structure");
 
 static struct vfsops ext2fs_vfsops = {
-	.vfs_fhtovp =		ext2_fhtovp,
-	.vfs_mount =		ext2_mount,
+	.vfs_fhtovp =	ext2_fhtovp,
+	.vfs_mount =	ext2_mount,
 	.vfs_root =		ext2_root,	/* root inode via vget */
-	.vfs_statfs =		ext2_statfs,
+	//.vfs_statfs =	ext2_statfs,
 	.vfs_sync =		ext2_sync,
-	.vfs_unmount =		ext2_unmount,
+	.vfs_unmount =	ext2_unmount,
 	.vfs_vget =		ext2_vget,
 };
 
-VFS_SET(ext2fs_vfsops, ext2fs, 0);
+//VFS_SET(ext2fs_vfsops, ext2fs, 0);
 
-static int	ext2_check_sb_compat(struct ext2fs *es, struct cdev *dev,
+static int	ext2_check_sb_compat(struct ext2fs *es, dev_t dev,
 		    int ronly);
 static int	compute_sb_data(struct vnode * devvp,
 		    struct ext2fs * es, struct m_ext2fs * fs);
@@ -107,7 +108,7 @@ static const char *ext2_opts[] = { "acls", "async", "noatime", "noclusterr",
  * mount system call
  */
 static int
-ext2_mount(struct mount *mp)
+ext2_mount(struct mount *mp, vnode_t devvp, user_addr_t data, vfs_context_t context)
 {
 	struct vfsoptlist *opts;
 	struct vnode *devvp;
@@ -691,7 +692,7 @@ out:
  * Unmount system call.
  */
 static int
-ext2_unmount(struct mount *mp, int mntflags)
+ext2_unmount(struct mount *mp, int mntflags, vfs_context_t context)
 {
 	struct ext2mount *ump;
 	struct m_ext2fs *fs;
@@ -807,7 +808,7 @@ ext2_statfs(struct mount *mp, struct statfs *sbp)
  * Note: we are always called with the filesystem marked `MPBUSY'.
  */
 static int
-ext2_sync(struct mount *mp, int waitfor)
+ext2_sync(struct mount *mp, int waitfor, vfs_context_t context)
 {
 	struct vnode *mvp, *vp;
 	struct thread *td;
@@ -883,7 +884,7 @@ loop:
  * done by the calling routine.
  */
 static int
-ext2_vget(struct mount *mp, ino_t ino, int flags, struct vnode **vpp)
+ext2_vget(struct mount *mp, ino64_t ino, struct vnode **vpp, vfs_context_t context)
 {
 	struct m_ext2fs *fs;
 	struct inode *ip;
@@ -1003,7 +1004,8 @@ ext2_vget(struct mount *mp, ino_t ino, int flags, struct vnode **vpp)
  *   those rights via. exflagsp and credanonp
  */
 static int
-ext2_fhtovp(struct mount *mp, struct fid *fhp, int flags, struct vnode **vpp)
+ext2_fhtovp(struct mount *mp, int fhlen, unsigned char *fhp, struct vnode **vpp,
+			vfs_context_t context)
 {
 	struct inode *ip;
 	struct ufid *ufhp;
@@ -1088,7 +1090,7 @@ ext2_cgupdate(struct ext2mount *mp, int waitfor)
  * Return the root of a filesystem.
  */
 static int
-ext2_root(struct mount *mp, int flags, struct vnode **vpp)
+ext2_root(struct mount *mp, struct vnode **vpp, vfs_context_t context)
 {
 	struct vnode *nvp;
 	int error;

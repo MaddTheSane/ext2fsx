@@ -59,9 +59,9 @@ struct ext2mount {
 	struct bufobj *um_bo;
 };
 
-#define	EXT2_LOCK(aa)		mtx_lock(&(aa)->um_lock)
-#define	EXT2_UNLOCK(aa)	mtx_unlock(&(aa)->um_lock)
-#define	EXT2_MTX(aa)		(&(aa)->um_lock)
+#define	EXT2_LOCK(aa)		lck_mtx_lock((aa)->um_lock)
+#define	EXT2_UNLOCK(aa)	lck_mtx_unlock((aa)->um_lock)
+#define	EXT2_MTX(aa)		((aa)->um_lock)
 
 /* Convert mount ptr to ext2fsmount ptr. */
 #define	VFSTOEXT2(mp)	((struct ext2mount *)vfs_fsprivate(mp))

@@ -45,6 +45,7 @@
 #include <sys/sysctl.h>
 #include <sys/syslog.h>
 #include <sys/buf.h>
+#include <kern/locks.h>
 
 #include <fs/ext2fs/fs.h>
 #include <fs/ext2fs/inode.h>
