@@ -267,46 +267,48 @@ fssmart_lookup:
         statusStr = e_SMARTDescrip[@(status)];
     severityStr = e_SMARTSeverityDescrip[@(severity)];
     
-    info = @{ExtFSMediaKeySMARTStatus: @(status),
-        ExtFSMediaKeySMARTStatusSeverity: @(severity),
-        ExtFSMediaKeySMARTStatusSeverityDescription: severityStr,
-        (statusStr ? ExtFSMediaKeySMARTStatusDescription : nil): statusStr};
-    
+	info = [NSDictionary dictionaryWithObjectsAndKeys:
+			[NSNumber numberWithInt:status], ExtFSMediaKeySMARTStatus,
+			[NSNumber numberWithInt:severity], ExtFSMediaKeySMARTStatusSeverity,
+			severityStr, ExtFSMediaKeySMARTStatusSeverityDescription,
+			statusStr, (statusStr ? ExtFSMediaKeySMARTStatusDescription : nil),
+			nil];
+	
     return (info);
 }
 
 - (void)monitorSMARTStatusThread:(NSArray*)args
 {
-    NSAutoreleasePool *tpool = [[NSAutoreleasePool alloc] init];
-    ExtFSSMARTEventFlag flags = efsSMARTEventFailed;
-    
-    e_smonActive = YES;
-    if ([args count] > 0)
-        flags = [args[0] unsignedLongValue];
-    do {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        NSArray *media = [self mediaWithIOTransportBus:efsIOTransportTypeATA];
-        NSEnumerator *en;
-        ExtFSMedia *obj;
-        ExtFSMARTStatus status;
+    @autoreleasepool {
+        ExtFSSMARTEventFlag flags = efsSMARTEventFailed;
         
-        en = [media objectEnumerator];
-        while ((obj = [en nextObject])) {
-            if (NO == [obj isWholeDisk])
-                continue;
-            status = [self SMARTStatusForMedia:obj parentDisk:nil];
-            if (efsSMARTVerified != status ||
-                 (efsSMARTVerified == status && (flags & efsSMARTEventVerified))) {
-                EFSMCPostNotification(ExtFSMediaNotificationSMARTStatus, obj,
-                    [self SMARTStatusDescription:status]);
+        e_smonActive = YES;
+        if ([args count] > 0)
+            flags = [args[0] unsignedLongValue];
+        do {
+            @autoreleasepool {
+                NSArray *media = [self mediaWithIOTransportBus:efsIOTransportTypeATA];
+                NSEnumerator *en;
+                ExtFSMedia *obj;
+                ExtFSMARTStatus status;
+                
+                en = [media objectEnumerator];
+                while ((obj = [en nextObject])) {
+                    if (NO == [obj isWholeDisk])
+                        continue;
+                    status = [self SMARTStatusForMedia:obj parentDisk:nil];
+                    if (efsSMARTVerified != status ||
+                         (efsSMARTVerified == status && (flags & efsSMARTEventVerified))) {
+                        EFSMCPostNotification(ExtFSMediaNotificationSMARTStatus, obj,
+                            [self SMARTStatusDescription:status]);
+                    }
+                }
+            
             }
-        }
-        
-        [pool release];
-        
-        usleep(e_smonPollInterval * 1000);
-    } while (0 != e_smonPollInterval);
-    [tpool release];
+            
+            usleep(e_smonPollInterval * 1000);
+        } while (0 != e_smonPollInterval);
+    }
     e_smonActive = NO;
     [NSThread exit];
 }
@@ -317,7 +319,6 @@ fssmart_lookup:
         NSArray *args = [[NSArray alloc] initWithObjects:@(flags), nil];
         e_smonPollInterval = interval;
         [NSThread  detachNewThreadSelector:@selector(monitorSMARTStatusThread:) toTarget:self withObject:args];
-        [args release];
         return (YES);
     }
     return (NO);

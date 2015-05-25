@@ -159,7 +159,7 @@ until you receive an ExtFSMediaNotificationExclusiveRequestDidComplete notificat
 - (ExtFSOpticalMediaType)opticalMediaTypeForName:(NSString*)name;
 - (NSString*)opticalMediaNameForType:(ExtFSOpticalMediaType)type;
 
-@property (retain) id delegate;
+@property (strong) id delegate;
 
 #ifdef DIAGNOSTIC
 - (void)dumpState;

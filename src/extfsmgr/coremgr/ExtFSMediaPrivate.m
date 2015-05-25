@@ -60,7 +60,7 @@ BOOL IsSMARTCapableTiger(io_service_t is)
     CFMutableDictionaryRef props;
     BOOL smart = NO;
     if (kIOReturnSuccess == IORegistryEntryCreateCFProperties(is, &props, kCFAllocatorDefault, 0)) {
-        smart = (nil != ((NSDictionary*)props)[@kIOPropertySMARTCapableKey]);
+        smart = (nil != ((__bridge NSDictionary*)props)[@kIOPropertySMARTCapableKey]);
         CFRelease(props);
     }
     return (smart);
@@ -192,11 +192,11 @@ __private_extern__ void PantherInitSMART()
             NSString *pdevice;
             
             /* See if the parent object exists */
-            pdevice = ((NSDictionary*)props)[@kIOBSDNameKey];
+            pdevice = ((__bridge NSDictionary*)props)[@kIOBSDNameKey];
             parent = [mc mediaWithBSDName:pdevice];
             if (!parent) {
                /* Parent does not exist */
-               parent = [mc createMediaWithIOService:ioparent properties:(NSDictionary*)props];
+               parent = [mc createMediaWithIOService:ioparent properties:(__bridge NSDictionary*)props];
             }
             CFRelease(props);
          }
@@ -219,19 +219,19 @@ __private_extern__ void PantherInitSMART()
              0 == (transType & efsIOTransportTypeMask))) {
             
             if (kIOReturnSuccess == IORegistryEntryCreateCFProperties(ioparent, &props, kCFAllocatorDefault, 0)) {
-                NSDictionary *protocolSpecs = ((NSDictionary*)props)[@kIOPropertyProtocolCharacteristicsKey];
+                NSDictionary *protocolSpecs = ((__bridge NSDictionary*)props)[@kIOPropertyProtocolCharacteristicsKey];
                 NSString *type, *location;
                 NSNumber *foundType;
                 
                 if ((type = protocolSpecs[@kIOPropertyPhysicalInterconnectTypeKey])
-                    || (type = ((NSDictionary*)props)[@kIOPropertyPhysicalInterconnectTypeKey])) {
+                    || (type = ((__bridge NSDictionary*)props)[@kIOPropertyPhysicalInterconnectTypeKey])) {
                     if ((foundType = transportNameTypeMap[type])
                         && (efsIOTransportTypeUnknown == (transType & efsIOTransportBusMask)))
                         transType = [foundType unsignedIntValue] | (transType & efsIOTransportTypeMask);
                 }
                 
                 if ((location = protocolSpecs[@kIOPropertyPhysicalInterconnectLocationKey])
-                    || (location = ((NSDictionary*)props)[@kIOPropertyPhysicalInterconnectLocationKey])) {
+                    || (location = ((__bridge NSDictionary*)props)[@kIOPropertyPhysicalInterconnectLocationKey])) {
                     if ((foundType = transportNameTypeMap[location])
                         && 0 == (transType & efsIOTransportTypeMask))
                         transType |= [foundType unsignedIntValue];
@@ -252,7 +252,7 @@ __private_extern__ void PantherInitSMART()
     }
    
    /* Find the icon description */
-   if (!parent || !(iconDesc = [parent iconDescription]))
+   if (!parent || !(iconDesc = (__bridge CFTypeRef)([parent iconDescription])))
       iconDesc = IORegistryEntrySearchCFProperty(service, kIOServicePlane,
          CFSTR(kIOMediaIconKey), kCFAllocatorDefault,
          kIORegistryIterateParents | kIORegistryIterateRecursively);
@@ -262,16 +262,14 @@ __private_extern__ void PantherInitSMART()
    ewlock(e_lock);
    
    e_ioTransport = transType;
-   [e_ioregName release];
-      e_ioregName = [regName retain];
+      e_ioregName = regName;
    if (e_parent != parent) {
        oldParent = e_parent;
-      e_parent = [parent retain];
+      e_parent = parent;
        addToParent = YES;
    }
    if (iconDesc) {
-      [e_iconDesc release];
-      e_iconDesc = [(NSDictionary*)iconDesc retain];
+      e_iconDesc = (__bridge NSDictionary*)iconDesc;
    }
    
    NSString * opticalType;
@@ -297,7 +295,6 @@ __private_extern__ void PantherInitSMART()
     if (oldParent) {
         [oldParent remChild:self];
         E2DiagLog(@"ExtFS: '%@' removing self from parent '%@'\n", self, oldParent);
-        [oldParent release];
     }
     if (addToParent)
         [e_parent addChild:self];
@@ -311,7 +308,7 @@ __private_extern__ void PantherInitSMART()
     ewlock(e_lock);
     if (properties != e_media) {
         oldprops = e_media;
-        e_media = [properties retain];
+        e_media = properties;
         
         #ifdef DEBUG
         if (NO == [e_bsdName isEqualToString:e_media[@kIOBSDNameKey]])
@@ -356,8 +353,6 @@ __private_extern__ void PantherInitSMART()
         }
     }
     eulock(e_lock);
-    
-    [oldprops release];
 }
 
 - (void)setIsMounted:(struct statfs*)stat
@@ -377,8 +372,8 @@ __private_extern__ void PantherInitSMART()
       e_blockAvail = 0;
       e_lastFSUpdate = 0;
       //e_fsType = fsTypeUnknown;
-      [e_where release]; e_where = nil;
-      [e_volName release]; e_volName = nil;
+      e_where = nil;
+      e_volName = nil;
       
       /* Reset the write flag in case the device is writable,
          but the mounted filesystem was not */
@@ -394,7 +389,6 @@ __private_extern__ void PantherInitSMART()
       eulock(e_lock);
       
       EFSMCPostNotification(ExtFSMediaNotificationUnmounted, self, nil);
-      [tmp release];
       return;
    }
    
@@ -417,7 +411,6 @@ __private_extern__ void PantherInitSMART()
       ftype = [fstype intValue];
    else
       E2Log(@"ExtFS: Unknown filesystem '%@'.\n", fstype);
-   [fsTypes release];
    tmpstr = [[NSString alloc] initWithUTF8String:stat->f_mntonname];
    
    ewlock(e_lock);
@@ -439,7 +432,6 @@ __private_extern__ void PantherInitSMART()
    tmp = e_where;
    e_where = tmpstr;
    eulock(e_lock);
-   [tmp release];
    tmp = nil;
    tmpstr = nil;
    
@@ -469,7 +461,7 @@ __private_extern__ void PantherInitSMART()
 
 - (NSDictionary*)iconDescription
 {
-   return ([[e_iconDesc retain] autorelease]);
+   return (e_iconDesc);
 }
 
 - (io_service_t)copyIOService
@@ -564,13 +556,13 @@ __private_extern__ void PantherInitSMART()
     BOOL found = NO;
     
     erlock(e_lock);
-    path = [e_where retain];
+    path = e_where;
     eulock(e_lock);
     
     FSRef fref;
-    CFURLRef url = path ? (CFURLRef)[NSURL fileURLWithPath:path] : NULL;
+    NSURL *url = path ? [NSURL fileURLWithPath:path] : nil;
     if (url)
-        CFURLGetFSRef(url, &fref);
+        CFURLGetFSRef((__bridge CFURLRef)url, &fref);
     FSCatalogInfo cinfo;
     ((FolderInfo*)&cinfo.finderInfo)->finderFlags = 0;
     (void)FSGetCatalogInfo(&fref, kFSCatInfoFinderInfo, &cinfo, NULL, NULL, NULL);
@@ -581,27 +573,24 @@ __private_extern__ void PantherInitSMART()
         if (customIcon) {
             [customIcon setName:[self bsdName]];
             ewlock(e_lock);
-            tmp = e_icon;
             e_icon = customIcon;
             e_attributeFlags |= kfsHasCustomIcon;
             eulock(e_lock);
-            [tmp release];
             found  = YES;
         }
     }
-    [path release];
     return (found);
 }
 
 - (ExtFSMedia*)initWithDeviceName:(NSString*)device
 {
+	self = [super init];
     if (0 != eilock(&e_lock)) {
         E2Log(@"ExtFS: Failed to allocate media object lock!\n");
-        [super release];
         return (nil);
     }
     e_media = [[NSDictionary alloc] initWithObjectsAndKeys:device, @kIOBSDNameKey, nil];
-    e_bsdName = [device retain];
+    e_bsdName = device;
     return (self);
 }
 

@@ -50,7 +50,6 @@ enum ExtFSMediaFlags : uint32_t;
 NSArray *args = [[NSArray alloc] initWithObjects:note, obj, info, nil]; \
 [[ExtFSMediaController mediaController] performSelectorOnMainThread:@selector(postNotification:) \
 withObject:args waitUntilDone:NO]; \
-[args release]; \
 } while(0)
 
 #ifndef EXTFS_DM_BNDL_ID
@@ -81,6 +80,9 @@ withObject:args waitUntilDone:NO]; \
 	NSImage* e_icon;
 	io_object_t e_smartService;
 }
+
+- (CFUUIDRef)uuid CF_RETURNS_RETAINED;
+
 @end
 
 @interface ExtFSMedia (ExtFSMediaControllerPrivate)

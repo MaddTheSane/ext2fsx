@@ -219,7 +219,6 @@ eulock(e_lock); \
       // will detect this and return false if the race occurs.
       BOOL good = [e2media updateAttributesFromIOService:service];
       if (!good) {
-         [e2media release];
          return (nil);
       }
       NSString *device = [e2media bsdName];
@@ -234,7 +233,6 @@ eulock(e_lock); \
       E2DiagLog(@"ExtFS: Media %@ created with parent %@.\n", e2media, [e2media parent]);
       
       EFSMCPostNotification(ExtFSMediaNotificationAppeared, e2media, nil);
-      [e2media release];
    } else {
       EFSMCPostNotification(ExtFSMediaNotificationCreationFailed,
         props[@kIOBSDNameKey], nil);
@@ -247,14 +245,13 @@ eulock(e_lock); \
   if ([e2media isMounted])
       E2DiagLog(@"ExtFS: Oops! Media '%@' removed while still mounted!\n", device);
    
-   (void)[e2media retain];
+   (void)e2media;
    rmmedia(e2media, device);
 
    EFSMCPostNotification(ExtFSMediaNotificationDisappeared, e2media, nil);
    
    E2DiagLog(@"ExtFS: Media '%@' removed. Retain count = %lu.\n",
-      e2media, (unsigned long)[e2media retainCount]);
-   [e2media release];
+      e2media, (unsigned long)0 /*[e2media retainCount]*/);
 }
 
 - (int)updateMedia:(io_iterator_t)iter remove:(BOOL)remove
@@ -276,16 +273,16 @@ eulock(e_lock); \
       kr = IORegistryEntryCreateCFProperties(iomedia, &properties,
          kCFAllocatorDefault, 0);
       if (0 == kr) {
-         device = ((NSMutableDictionary*)properties)[@kIOBSDNameKey];
+         device = ((__bridge NSMutableDictionary*)properties)[@kIOBSDNameKey];
          erlock(e_lock);
-         e2media = [e_media[device] retain];
+         e2media = e_media[device];
          eulock(e_lock);
          if (e2media) {
             if (remove)
                [self removeMedia:e2media device:device];
             else {
                E2DiagLog(@"ExtFS: Existing media %@ appeared again.\n", e2media);
-               [e2media updateProperties:(NSDictionary*)properties];
+               [e2media updateProperties:(__bridge NSDictionary*)properties];
                #ifdef DIAGNOSTIC
                erlock(e_lock);
                kr = (e2media == e_media[device]) ? 0 : 1;
@@ -302,7 +299,6 @@ eulock(e_lock); \
                    E2DiagLog(@"ExtFS: failed to update existing media %@!\n", e2media);
                }
             
-                [e2media release];
                 CFRelease(properties);
                 IOObjectRelease(iomedia);
                 continue;
@@ -310,7 +306,7 @@ eulock(e_lock); \
          }
          
          if (!remove) {
-            if ((e2media = [self createMediaWithIOService:iomedia properties:(NSDictionary*)properties]))
+            if ((e2media = [self createMediaWithIOService:iomedia properties:(__bridge NSDictionary*)properties]))
                 [needProbe addObject:e2media];
          }
          
@@ -362,15 +358,15 @@ eulock(e_lock); \
 - (BOOL)allowMount:(NSString*)device
 {
     erlock(e_lock);
-    id delegate = [e_delegate retain];
+    id delegate = e_delegate;
     eulock(e_lock);
     
-    (void)[delegate autorelease];
+    (void)delegate;
     if (delegate && [delegate respondsToSelector:@selector(allowMediaToMount:)]) {
         ExtFSMedia *media = [self mediaWithBSDName:device];
         if (!media) {
             // XXX we can get race condtions between IOKit and DiskArb (or even various DiskArb callbacks)
-            media = [[[ExtFSMedia alloc] initWithDeviceName:device] autorelease];
+            media = [[ExtFSMedia alloc] initWithDeviceName:device];
         }
             return ([delegate allowMediaToMount:media]);
     }
@@ -502,9 +498,9 @@ eulock(e_lock); \
 {
    ExtFSMedia *m;
    erlock(e_lock);
-   m = [e_media[device] retain];
+   m = e_media[device];
    eulock(e_lock);
-   return ([m autorelease]);
+   return (m);
 }
 
 - (int)mount:(ExtFSMedia*)media on:(NSString*)dir
@@ -531,7 +527,7 @@ eulock(e_lock); \
       ke = 0;
       EFSMCPostNotification(ExtFSMediaNotificationApplicationWillMount, media, nil);
       NSURL *url = dir ? [NSURL fileURLWithPath:dir] : nil;
-      DADiskMount(dadisk, (CFURLRef)url, kDADiskMountOptionDefault, DiskArbCallback_MountNotification, NULL);
+      DADiskMount(dadisk, (__bridge CFURLRef)url, kDADiskMountOptionDefault, DiskArbCallback_MountNotification, NULL);
       CFRelease(dadisk);
    } else
       ke = ENOENT;
@@ -655,9 +651,9 @@ unmount_failed:
 - (id)delegate
 {
     erlock(e_lock);
-    id obj = [e_delegate retain];
+    id obj = e_delegate;
     eulock(e_lock);
-    return ([obj autorelease]);
+    return (obj);
 }
 
 - (void)setDelegate:(id)obj
@@ -666,10 +662,9 @@ unmount_failed:
     ewlock(e_lock);
     if (obj != e_delegate) {
         tmp = e_delegate;
-        e_delegate = [obj retain];
+        e_delegate = obj;
     }
     eulock(e_lock);
-    [tmp release];
 }
 
 #ifdef DIAGNOSTIC
@@ -713,46 +708,46 @@ unmount_failed:
     
     CFRunLoopSourceRef rlSource = IONotificationPortGetRunLoopSource(notify_port_ref);
     
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    CFRunLoopAddSource([[NSRunLoop currentRunLoop] getCFRunLoop], rlSource,
-        kCFRunLoopCommonModes);
-    
-    /* Process the initial registry entrires */
-    iomatch_add_callback(nil, notify_add_iter);
-    iomatch_rem_callback(nil, notify_rem_iter);
-
-    /* Init Disk Arb */
-    if (NULL == (daSession = DASessionCreate(kCFAllocatorDefault))) {
-        pthread_mutex_unlock(&e_initMutex);
-        [NSThread exit];
-    }
-    DASessionScheduleWithRunLoop(daSession, [[NSRunLoop currentRunLoop] getCFRunLoop], kCFRunLoopCommonModes);
-
-    // unmount detection
-    DARegisterDiskDescriptionChangedCallback(daSession, NULL, kDADiskDescriptionWatchVolumePath,
-        DiskArbCallback_PathChangeNotification, NULL);
-    // mount detection
-    DARegisterDiskAppearedCallback(daSession, NULL, DiskArbCallback_AppearedNotification, NULL);
-    // rename detection
-    DARegisterDiskDescriptionChangedCallback(daSession, NULL, kDADiskDescriptionWatchVolumeName,
-        DiskArbCallback_NameChangeNotification, NULL);
-    
-    // approval callbacks
-    if ((daApprovalSession = DAApprovalSessionCreate(kCFAllocatorDefault))) {
-        DAApprovalSessionScheduleWithRunLoop(daApprovalSession, [[NSRunLoop currentRunLoop] getCFRunLoop],
+    @autoreleasepool {
+        CFRunLoopAddSource([[NSRunLoop currentRunLoop] getCFRunLoop], rlSource,
             kCFRunLoopCommonModes);
-        DARegisterDiskMountApprovalCallback(daApprovalSession, kDADiskDescriptionMatchVolumeMountable, DiskArbCallback_ApproveMount, NULL);
-    } else {
-        E2Log(@"ExtFS: Failed to create DAApprovalSession!\n");
+        
+        /* Process the initial registry entrires */
+        iomatch_add_callback(nil, notify_add_iter);
+        iomatch_rem_callback(nil, notify_rem_iter);
+
+        /* Init Disk Arb */
+        if (NULL == (daSession = DASessionCreate(kCFAllocatorDefault))) {
+            pthread_mutex_unlock(&e_initMutex);
+            [NSThread exit];
+        }
+        DASessionScheduleWithRunLoop(daSession, [[NSRunLoop currentRunLoop] getCFRunLoop], kCFRunLoopCommonModes);
+
+        // unmount detection
+        DARegisterDiskDescriptionChangedCallback(daSession, NULL, kDADiskDescriptionWatchVolumePath,
+            DiskArbCallback_PathChangeNotification, NULL);
+        // mount detection
+        DARegisterDiskAppearedCallback(daSession, NULL, DiskArbCallback_AppearedNotification, NULL);
+        // rename detection
+        DARegisterDiskDescriptionChangedCallback(daSession, NULL, kDADiskDescriptionWatchVolumeName,
+            DiskArbCallback_NameChangeNotification, NULL);
+        
+        // approval callbacks
+        if ((daApprovalSession = DAApprovalSessionCreate(kCFAllocatorDefault))) {
+            DAApprovalSessionScheduleWithRunLoop(daApprovalSession, [[NSRunLoop currentRunLoop] getCFRunLoop],
+                kCFRunLoopCommonModes);
+            DARegisterDiskMountApprovalCallback(daApprovalSession, kDADiskDescriptionMatchVolumeMountable, DiskArbCallback_ApproveMount, NULL);
+        } else {
+            E2Log(@"ExtFS: Failed to create DAApprovalSession!\n");
+        }
+        
+        pthread_mutex_unlock(&e_initMutex);
+    
     }
     
-    pthread_mutex_unlock(&e_initMutex);
-    
-    [pool release];
-    
-    pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
     [[NSRunLoop currentRunLoop] run];
-    [pool release];
+    }
 }
 
 - (instancetype)init
@@ -765,7 +760,6 @@ unmount_failed:
    
    if (e_instance) {
       pthread_mutex_unlock(&e_initMutex);
-      [super release];
       return (e_instance);
    }
    
@@ -777,7 +771,6 @@ unmount_failed:
    if (0 != eilock(&e_lock)) {
       pthread_mutex_unlock(&e_initMutex);
       E2DiagLog(@"ExtFS: Failed to allocate lock for media controller!\n");
-      [super release];
       return (nil);
    }
    
@@ -843,7 +836,6 @@ unmount_failed:
    for (i=0; i < kPendingCount; ++i) {
         obj = [[NSMutableArray alloc] init];
         [e_pending addObject:obj];
-        [obj release];
    }
    
    notify_port_ref = IONotificationPortCreate(kIOMasterPortDefault);
@@ -890,13 +882,10 @@ unmount_failed:
 exit:
    e_instance = nil;
    if (e_lock) edlock(e_lock);
-   [e_media release];
-   [e_pending release];
    if (notify_add_iter) IOObjectRelease(notify_add_iter);
    if (notify_rem_iter) IOObjectRelease(notify_rem_iter);
    if (notify_port_ref) IONotificationPortDestroy(notify_port_ref);
    pthread_mutex_unlock(&e_initMutex);
-   [super release];
    return (nil);
 }
 
@@ -922,7 +911,6 @@ exit:
    pthread_mutex_unlock(&e_initMutex);
    edlock(e_lock);
 #endif
-   [super dealloc];
 }
 
 @end
@@ -1255,101 +1243,103 @@ static int const e_DiskArbUnixErrorTable[] = {
 
 static void DiskArb_CallFailed(const char *device, int type, int status)
 {
-   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+   @autoreleasepool {
    
-   NSString *bsd = NSSTR(device), *err = nil, *op, *msg, *opid;
-   ExtFSMedia *emedia;
-   NSBundle *me;
-   ExtFSMediaController *mc = [ExtFSMediaController mediaController];
-   
-   if ((emedia = [mc mediaWithBSDName:bsd])) {
-      short idx = (status & 0xFF);
-      if (MACH_ERR_UNIX_DOMAIN == err_get_sub(status)) {
-         if (idx <= DA_UNIX_ERR_TABLE_LAST)
-            idx = e_DiskArbUnixErrorTable[idx];
-         else
-            idx = 1;
-      }
+      NSString *bsd = @(device), *err = nil, *op, *msg, *opid;
+      ExtFSMedia *emedia;
+      NSBundle *me;
+      ExtFSMediaController *mc = [ExtFSMediaController mediaController];
       
-      NSDictionary *dict;
-      
-      [mc removePending:emedia];
-      
-      if (idx > DA_ERR_TABLE_LAST) {
-         if (EBUSY == idx) // This can be returned instead of kDAReturnBusy
-            idx = 2;
-         else if (ETIMEDOUT == idx)
-            err = @"Operation timed out";
-         else
-            idx = 1;
-      }
-      // Table is read-only, no need to protect it.
-      if (!err)
-         err = e_DiskArbErrorTable[idx];
-      
-      msg = nil;
-      switch (type) {
-        /* XXX - No mount errors from Disk Arb??? */
-        case EXT_DISK_ARB_MOUNT_FAILURE:
-            if ([emedia isMounted]) // make sure it's not mounted
-                return;
-            opid = ExtFSMediaNotificationMounted;
-            op = @"Mount";
-            msg = @"The filesystem may need repair. Please use Disk Utility to check the filesystem.";
-            break;
-        case kDiskArbUnmountRequestFailed:
-            opid = ExtFSMediaNotificationUnmounted;
-            op = @"Unmount";
-            msg = @"The disk may be in use by an application.";
-            break;
-        case kDiskArbUnmountAndEjectRequestFailed:
-        case kDiskArbEjectRequestFailed:
-            opid = ExtFSMediaNotificationUnmounted;
-            op = @"Eject";
-            break;
-        case kDiskArbDiskChangeRequestFailed:
-            opid = @"";
-            op = @"Change Request";
-            break;
-        default:
-            opid = @"";
-            op = @"Unknown";
-            break;
-      }
-      
-      // Get a ref to ourself so we can load our localized strings.
-      erlock(e_instanceLock);
-      me = [NSBundle bundleWithIdentifier:EXTFS_DM_BNDL_ID];
-      if (me) {
-        NSString *errl, *opl, *msgl;
-        
-        errl = [me localizedStringForKey:err value:nil table:nil];
-        if (errl)
-            err = errl;
-        
-        opl = [me localizedStringForKey:op value:nil table:nil];
-        if (opl)
-            op = opl;
-        
-        if (msg) {
-            if ((msgl = [me localizedStringForKey:msg value:nil table:nil]))
-                msg = msgl;
-        }
-      }
-      eulock(e_instanceLock);
-      
-      dict = @{ExtMediaKeyOpFailureID: opid,
-         ExtMediaKeyOpFailureType: op,
-         ExtMediaKeyOpFailureDevice: bsd,
-         ExtMediaKeyOpFailureError: @(status),
-         ExtMediaKeyOpFailureErrorString: err,
-         (msg ? ExtMediaKeyOpFailureMsgString : nil): msg};
+      if ((emedia = [mc mediaWithBSDName:bsd])) {
+         short idx = (status & 0xFF);
+         if (MACH_ERR_UNIX_DOMAIN == err_get_sub(status)) {
+            if (idx <= DA_UNIX_ERR_TABLE_LAST)
+               idx = e_DiskArbUnixErrorTable[idx];
+            else
+               idx = 1;
+         }
+         
+         NSDictionary *dict;
+         
+         [mc removePending:emedia];
+         
+         if (idx > DA_ERR_TABLE_LAST) {
+            if (EBUSY == idx) // This can be returned instead of kDAReturnBusy
+               idx = 2;
+            else if (ETIMEDOUT == idx)
+               err = @"Operation timed out";
+            else
+               idx = 1;
+         }
+         // Table is read-only, no need to protect it.
+         if (!err)
+            err = e_DiskArbErrorTable[idx];
+         
+         msg = nil;
+         switch (type) {
+           /* XXX - No mount errors from Disk Arb??? */
+           case EXT_DISK_ARB_MOUNT_FAILURE:
+               if ([emedia isMounted]) // make sure it's not mounted
+                   return;
+               opid = ExtFSMediaNotificationMounted;
+               op = @"Mount";
+               msg = @"The filesystem may need repair. Please use Disk Utility to check the filesystem.";
+               break;
+           case kDiskArbUnmountRequestFailed:
+               opid = ExtFSMediaNotificationUnmounted;
+               op = @"Unmount";
+               msg = @"The disk may be in use by an application.";
+               break;
+           case kDiskArbUnmountAndEjectRequestFailed:
+           case kDiskArbEjectRequestFailed:
+               opid = ExtFSMediaNotificationUnmounted;
+               op = @"Eject";
+               break;
+           case kDiskArbDiskChangeRequestFailed:
+               opid = @"";
+               op = @"Change Request";
+               break;
+           default:
+               opid = @"";
+               op = @"Unknown";
+               break;
+         }
+         
+         // Get a ref to ourself so we can load our localized strings.
+         erlock(e_instanceLock);
+         me = [NSBundle bundleWithIdentifier:EXTFS_DM_BNDL_ID];
+         if (me) {
+           NSString *errl, *opl, *msgl;
+           
+           errl = [me localizedStringForKey:err value:nil table:nil];
+           if (errl)
+               err = errl;
+           
+           opl = [me localizedStringForKey:op value:nil table:nil];
+           if (opl)
+               op = opl;
+           
+           if (msg) {
+               if ((msgl = [me localizedStringForKey:msg value:nil table:nil]))
+                   msg = msgl;
+           }
+         }
+         eulock(e_instanceLock);
+         
+         dict = [NSDictionary dictionaryWithObjectsAndKeys:
+                 opid, ExtMediaKeyOpFailureID,
+                 op, ExtMediaKeyOpFailureType,
+                 bsd, ExtMediaKeyOpFailureDevice,
+                 [NSNumber numberWithInt:status], ExtMediaKeyOpFailureError,
+                 err, ExtMediaKeyOpFailureErrorString,
+                 msg, (msg ? ExtMediaKeyOpFailureMsgString : nil),
+                 nil];
 
-      EFSMCPostNotification(ExtFSMediaNotificationOpFailure, emedia, dict);
-      
-      E2Log(@"ExtFS: DiskArb failure for device '%s', with type %d and status 0x%X\n",
-         device, type, status);
-   }
+         EFSMCPostNotification(ExtFSMediaNotificationOpFailure, emedia, dict);
+         
+         E2Log(@"ExtFS: DiskArb failure for device '%s', with type %d and status 0x%X\n",
+            device, type, status);
+      }
    
-   [pool release];
+   }
 }

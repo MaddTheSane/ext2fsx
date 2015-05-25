@@ -162,7 +162,7 @@ The object will be returned auto-released.
  to release the represented object manually.
 
  */
-@property (retain) id representedObject;
+@property (strong) id representedObject;
 
 /*!
 @method parent
@@ -173,7 +173,7 @@ hierarchy.
 the target object -- nil is returned if the target has
 no parent.
 */
-@property (readonly, assign) ExtFSMedia *parent;
+@property (readonly, weak) ExtFSMedia *parent;
 /*!
 @method children
 @abstract Access the children of the target object.
