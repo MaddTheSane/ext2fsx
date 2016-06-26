@@ -103,7 +103,7 @@ ext2_alloc(struct inode *ip, daddr_t lbn, e4fs_daddr_t bpref, int size,
 #endif /* INVARIANTS */
 	if (size == fs->e2fs_bsize && fs->e2fs->e2fs_fbcount == 0)
 		goto nospace;
-	if (cred->cr_uid != 0 && 
+	if (cred->cr_posix.cr_uid != 0 &&
 		fs->e2fs->e2fs_fbcount < fs->e2fs->e2fs_rbcount)
 		goto nospace;
 	if (bpref >= fs->e2fs->e2fs_bcount)
@@ -126,8 +126,8 @@ ext2_alloc(struct inode *ip, daddr_t lbn, e4fs_daddr_t bpref, int size,
 	}
 nospace:
 	EXT2_UNLOCK(ump);
-	ext2_fserr(fs, cred->cr_uid, "filesystem full");
-	uprintf("\n%s: write failed, filesystem is full\n", fs->e2fs_fsmnt);
+	ext2_fserr(fs, cred->cr_posix.cr_uid, "filesystem full");
+	printf("\n%s: write failed, filesystem is full\n", fs->e2fs_fsmnt);
 	return (ENOSPC);
 }
 

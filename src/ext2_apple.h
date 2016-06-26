@@ -271,7 +271,9 @@ int vop_stdfsync(struct vnop_fsync_args *ap)
 
 /* Soft Updates */
 #define SF_SNAPSHOT 0
+#ifndef SF_NOUNLINK
 #define SF_NOUNLINK 0
+#endif
 /* No delete */
 #define NOUNLINK 0
 

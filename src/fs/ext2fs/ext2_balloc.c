@@ -50,6 +50,7 @@
 #include <fs/ext2fs/ext2_dinode.h>
 #include <fs/ext2fs/ext2_extern.h>
 #include <fs/ext2fs/ext2_mount.h>
+#include "ext2_apple.h"
 
 /*
  * Balloc defines the structure of filesystem storage

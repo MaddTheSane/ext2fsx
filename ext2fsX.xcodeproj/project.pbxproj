@@ -1508,42 +1508,6 @@
 		55FB807913C15EBF006C2DAD /* Makefile.library */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.library; sourceTree = "<group>"; };
 		55FB807A13C15EBF006C2DAD /* Makefile.profile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.profile; sourceTree = "<group>"; };
 		55FB807B13C15EBF006C2DAD /* Makefile.solaris-lib */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Makefile.solaris-lib"; sourceTree = "<group>"; };
-		55FB80A113C15EBF006C2DAD /* ChangeLog */ = {isa = PBXFileReference; lastKnownFileType = text; path = ChangeLog; sourceTree = "<group>"; };
-		55FB80A213C15EBF006C2DAD /* clear.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = clear.c; sourceTree = "<group>"; };
-		55FB80A313C15EBF006C2DAD /* compare.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = compare.c; sourceTree = "<group>"; };
-		55FB80A413C15EBF006C2DAD /* configure.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.in; sourceTree = "<group>"; };
-		55FB80A513C15EBF006C2DAD /* copy.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = copy.c; sourceTree = "<group>"; };
-		55FB80A613C15EBF006C2DAD /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
-		55FB80A813C15EBF006C2DAD /* jump.funcs */ = {isa = PBXFileReference; lastKnownFileType = text; path = jump.funcs; sourceTree = "<group>"; };
-		55FB80A913C15EBF006C2DAD /* jump.ignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = jump.ignore; sourceTree = "<group>"; };
-		55FB80AA13C15EBF006C2DAD /* jump.import */ = {isa = PBXFileReference; lastKnownFileType = text; path = jump.import; sourceTree = "<group>"; };
-		55FB80AB13C15EBF006C2DAD /* jump.params */ = {isa = PBXFileReference; lastKnownFileType = text; path = jump.params; sourceTree = "<group>"; };
-		55FB80AC13C15EBF006C2DAD /* jump.undefs */ = {isa = PBXFileReference; lastKnownFileType = text; path = jump.undefs; sourceTree = "<group>"; };
-		55FB80AD13C15EBF006C2DAD /* jump.vars */ = {isa = PBXFileReference; lastKnownFileType = text; path = jump.vars; sourceTree = "<group>"; };
-		55FB80AE13C15EBF006C2DAD /* gen_uuid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gen_uuid.c; sourceTree = "<group>"; };
-		55FB80AF13C15EBF006C2DAD /* gen_uuid_nt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gen_uuid_nt.c; sourceTree = "<group>"; };
-		55FB80B013C15EBF006C2DAD /* isnull.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = isnull.c; sourceTree = "<group>"; };
-		55FB80B113C15EBF006C2DAD /* libuuid.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = libuuid.3.in; sourceTree = "<group>"; };
-		55FB80B213C15EBF006C2DAD /* Makefile.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
-		55FB80B313C15EBF006C2DAD /* pack.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pack.c; sourceTree = "<group>"; };
-		55FB80B413C15EBF006C2DAD /* parse.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = parse.c; sourceTree = "<group>"; };
-		55FB80B513C15EBF006C2DAD /* tst_uuid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tst_uuid.c; sourceTree = "<group>"; };
-		55FB80B613C15EBF006C2DAD /* unpack.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = unpack.c; sourceTree = "<group>"; };
-		55FB80B713C15EBF006C2DAD /* unparse.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = unparse.c; sourceTree = "<group>"; };
-		55FB80B813C15EBF006C2DAD /* uuid.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid.3.in; sourceTree = "<group>"; };
-		55FB80B913C15EBF006C2DAD /* uuid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uuid.h; sourceTree = "<group>"; };
-		55FB80BA13C15EBF006C2DAD /* uuid.pc.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid.pc.in; sourceTree = "<group>"; };
-		55FB80BB13C15EBF006C2DAD /* uuid_clear.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_clear.3.in; sourceTree = "<group>"; };
-		55FB80BC13C15EBF006C2DAD /* uuid_compare.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_compare.3.in; sourceTree = "<group>"; };
-		55FB80BD13C15EBF006C2DAD /* uuid_copy.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_copy.3.in; sourceTree = "<group>"; };
-		55FB80BE13C15EBF006C2DAD /* uuid_generate.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_generate.3.in; sourceTree = "<group>"; };
-		55FB80BF13C15EBF006C2DAD /* uuid_is_null.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_is_null.3.in; sourceTree = "<group>"; };
-		55FB80C013C15EBF006C2DAD /* uuid_parse.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_parse.3.in; sourceTree = "<group>"; };
-		55FB80C113C15EBF006C2DAD /* uuid_time.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_time.3.in; sourceTree = "<group>"; };
-		55FB80C213C15EBF006C2DAD /* uuid_time.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = uuid_time.c; sourceTree = "<group>"; };
-		55FB80C313C15EBF006C2DAD /* uuid_types.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_types.h.in; sourceTree = "<group>"; };
-		55FB80C413C15EBF006C2DAD /* uuid_unparse.3.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = uuid_unparse.3.in; sourceTree = "<group>"; };
-		55FB80C513C15EBF006C2DAD /* uuidP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uuidP.h; sourceTree = "<group>"; };
 		55FB80CA13C15EBF006C2DAD /* badblocks.8.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = badblocks.8.in; sourceTree = "<group>"; };
 		55FB80CB13C15EBF006C2DAD /* badblocks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = badblocks.c; sourceTree = "<group>"; };
 		55FB80CC13C15EBF006C2DAD /* base_device.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = base_device.c; sourceTree = "<group>"; };
@@ -3005,7 +2969,6 @@
 				55FB807A13C15EBF006C2DAD /* Makefile.profile */,
 				55FB807B13C15EBF006C2DAD /* Makefile.solaris-lib */,
 				55F641F11537559800F6E73D /* ss */,
-				55FB809F13C15EBF006C2DAD /* uuid */,
 			);
 			path = lib;
 			sourceTree = "<group>";
@@ -3215,57 +3178,6 @@
 				55FB800C13C15EBF006C2DAD /* plugin.h */,
 			);
 			path = evms;
-			sourceTree = "<group>";
-		};
-		55FB809F13C15EBF006C2DAD /* uuid */ = {
-			isa = PBXGroup;
-			children = (
-				55FB80A113C15EBF006C2DAD /* ChangeLog */,
-				55FB80A213C15EBF006C2DAD /* clear.c */,
-				55FB80A313C15EBF006C2DAD /* compare.c */,
-				55FB80A413C15EBF006C2DAD /* configure.in */,
-				55FB80A513C15EBF006C2DAD /* copy.c */,
-				55FB80A613C15EBF006C2DAD /* COPYING */,
-				55FB80A713C15EBF006C2DAD /* dll */,
-				55FB80AE13C15EBF006C2DAD /* gen_uuid.c */,
-				55FB80AF13C15EBF006C2DAD /* gen_uuid_nt.c */,
-				55FB80B013C15EBF006C2DAD /* isnull.c */,
-				55FB80B113C15EBF006C2DAD /* libuuid.3.in */,
-				55FB80B213C15EBF006C2DAD /* Makefile.in */,
-				55FB80B313C15EBF006C2DAD /* pack.c */,
-				55FB80B413C15EBF006C2DAD /* parse.c */,
-				55FB80B513C15EBF006C2DAD /* tst_uuid.c */,
-				55FB80B613C15EBF006C2DAD /* unpack.c */,
-				55FB80B713C15EBF006C2DAD /* unparse.c */,
-				55FB80B813C15EBF006C2DAD /* uuid.3.in */,
-				55FB80B913C15EBF006C2DAD /* uuid.h */,
-				55FB80BA13C15EBF006C2DAD /* uuid.pc.in */,
-				55FB80BB13C15EBF006C2DAD /* uuid_clear.3.in */,
-				55FB80BC13C15EBF006C2DAD /* uuid_compare.3.in */,
-				55FB80BD13C15EBF006C2DAD /* uuid_copy.3.in */,
-				55FB80BE13C15EBF006C2DAD /* uuid_generate.3.in */,
-				55FB80BF13C15EBF006C2DAD /* uuid_is_null.3.in */,
-				55FB80C013C15EBF006C2DAD /* uuid_parse.3.in */,
-				55FB80C113C15EBF006C2DAD /* uuid_time.3.in */,
-				55FB80C213C15EBF006C2DAD /* uuid_time.c */,
-				55FB80C313C15EBF006C2DAD /* uuid_types.h.in */,
-				55FB80C413C15EBF006C2DAD /* uuid_unparse.3.in */,
-				55FB80C513C15EBF006C2DAD /* uuidP.h */,
-			);
-			path = uuid;
-			sourceTree = "<group>";
-		};
-		55FB80A713C15EBF006C2DAD /* dll */ = {
-			isa = PBXGroup;
-			children = (
-				55FB80A813C15EBF006C2DAD /* jump.funcs */,
-				55FB80A913C15EBF006C2DAD /* jump.ignore */,
-				55FB80AA13C15EBF006C2DAD /* jump.import */,
-				55FB80AB13C15EBF006C2DAD /* jump.params */,
-				55FB80AC13C15EBF006C2DAD /* jump.undefs */,
-				55FB80AD13C15EBF006C2DAD /* jump.vars */,
-			);
-			path = dll;
 			sourceTree = "<group>";
 		};
 		55FB80C813C15EBF006C2DAD /* misc */ = {
@@ -6585,6 +6497,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.sourceforge.ext2fs.fs.ext2.kext;
 				PRODUCT_NAME = ext2fs;
+				USER_HEADER_SEARCH_PATHS = src/e2fsprogs/lib/ext2fs;
 				WRAPPER_EXTENSION = kext;
 			};
 			name = Debug;
@@ -6615,6 +6528,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.sourceforge.ext2fs.fs.ext2.kext;
 				PRODUCT_NAME = ext2fs;
+				USER_HEADER_SEARCH_PATHS = src/e2fsprogs/lib/ext2fs;
 				WRAPPER_EXTENSION = kext;
 			};
 			name = Release;

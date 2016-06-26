@@ -51,7 +51,7 @@ __private_extern__ char*
 e_strrchr(const char *s, int c)
 {
    char *name;
-   size_t i;
+   ssize_t i;
    
    name = NULL;
    i = strlen(s);
