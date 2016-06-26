@@ -28,8 +28,7 @@
 #import "extfsmgr.h"
 #import "SMARTAlertController.h"
 
-@interface EAppDelegate : NSObject {
-}
+@interface EAppDelegate : NSObject <NSApplicationDelegate>
 
 @end
 
@@ -38,7 +37,7 @@
 - (void)volSMARTStatus:(NSNotification*)notification
 {
     NSDictionary *info = [notification userInfo];
-    int status = [[info objectForKey:ExtFSMediaKeySMARTStatus] intValue];
+    int status = [info[ExtFSMediaKeySMARTStatus] intValue];
     if (status > efsSMARTVerified && status != efsSMARTTestInProgress)  {
         SMARTAlertController *win = 
         [[SMARTAlertController alloc] initWithMedia:[notification object]
@@ -47,9 +46,9 @@
         [NSApp requestUserAttention:NSCriticalRequest];
     } else {
         NSLog(@"efssmartd: %@ for disk %@: '%@'.",
-            [info objectForKey:ExtFSMediaKeySMARTStatusSeverityDescription],
+            info[ExtFSMediaKeySMARTStatusSeverityDescription],
             [[notification object] ioRegistryName],
-            [info objectForKey:ExtFSMediaKeySMARTStatusDescription]);
+            info[ExtFSMediaKeySMARTStatusDescription]);
     }
 }
 
@@ -67,7 +66,7 @@
     
     prefs = [[NSUserDefaults standardUserDefaults] objectForKey:EXT_PREF_KEY_SMARTD];
     if (prefs) {
-        NSNumber *num = [prefs objectForKey:EXT_PREF_KEY_SMARTD_MON_INTERVAL];
+        NSNumber *num = prefs[EXT_PREF_KEY_SMARTD_MON_INTERVAL];
         if (num)
             interval = [num unsignedIntValue] * 1000;
     }
@@ -93,13 +92,13 @@
 
 int main (int argc, const char *argv[])
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	@autoreleasepool {
     
     // Add in global prefs
     [[NSUserDefaults standardUserDefaults] addSuiteNamed:EXT_PREF_ID];
     
     [[NSApplication sharedApplication] setDelegate:[[EAppDelegate alloc] init]];
-    [pool release];
-    
+		
     return (NSApplicationMain(argc,argv));
+	}
 }

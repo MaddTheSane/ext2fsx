@@ -23,13 +23,15 @@
 *
 */
 
-#import <unistd.h>
+#include <unistd.h>
 
-#import <IOKit/storage/ata/ATASMARTLib.h>
+#include <IOKit/storage/ata/ATASMARTLib.h>
 
 #import "ExtFSMediaPrivate.h"
 #import "ExtFSMediaSMART.h"
 #import "ExtFSLock.h"
+
+#import <Cocoa/Cocoa.h>
 
 NSString * const ExtFSMediaNotificationSMARTStatus = @"ExtFSMediaNotificationSMARTStatus";
 NSString * const ExtFSMediaKeySMARTStatus = @"ExtFSMediaKeySMARTStatus";
@@ -112,12 +114,12 @@ static NSDictionary *e_SMARTDescrip = nil, *e_SMARTSeverityDescrip = nil;
     BOOL setService = NO;
     if (service) {
         if (kIOReturnSuccess != IOObjectRetain(service))
-            service = nil;
+            service = IO_OBJECT_NULL;
     } else if ([media isSMART]) {
         service = [media copySMARTIOService];
         setService = YES;
     } else
-        service = nil;
+        service = IO_OBJECT_NULL;
     
     if (service) {
         kern_return_t kr;
@@ -202,42 +204,42 @@ static NSDictionary *e_SMARTDescrip = nil, *e_SMARTSeverityDescrip = nil;
 
         e_SMARTDescrip = [[NSDictionary alloc] initWithObjectsAndKeys:
             [me localizedStringForKey:@"The S.M.A.R.T. service is not supported by this disk." value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTInvalidTransport],
+                @(efsSMARTInvalidTransport),
             [me localizedStringForKey:@"The status query failed due to an OS error." value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTOSError],
+                @(efsSMARTOSError),
             [me localizedStringForKey:@"Disk verified." value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTVerified],
+                @(efsSMARTVerified),
             [me localizedStringForKey:@"Test aborted." value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestAbort],
+                @(efsSMARTTestAbort),
             [me localizedStringForKey:@"Test interrupted." value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestInterrupted],
+                @(efsSMARTTestInterrupted),
             [me localizedStringForKey:
                 @"A fatal disk error was detected! " EXTFS_REPLACE_DRIVE_MSG value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestFatal],
+                @(efsSMARTTestFatal),
             [me localizedStringForKey:
                 @"An unknown disk error was detected! " EXTFS_REPLACE_DRIVE_MSG value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestUnknownFail],
+                @(efsSMARTTestUnknownFail),
             [me localizedStringForKey:
                 @"A disk electrical failure was detected! " EXTFS_REPLACE_DRIVE_MSG value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestElectricFail],
+                @(efsSMARTTestElectricFail),
             [me localizedStringForKey:
                 @"A disk motor failure was detected! " EXTFS_REPLACE_DRIVE_MSG value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestServoFail],
+                @(efsSMARTTestServoFail),
             [me localizedStringForKey:
                 @"A disk read failure was detected! " EXTFS_REPLACE_DRIVE_MSG value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestReadFail],
+                @(efsSMARTTestReadFail),
             [me localizedStringForKey:
                 @"The disk test is currently in progress." EXTFS_REPLACE_DRIVE_MSG value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTTestInProgress],
+                @(efsSMARTTestInProgress),
             nil];
             
         e_SMARTSeverityDescrip = [[NSDictionary alloc] initWithObjectsAndKeys:
             [me localizedStringForKey:@"Informational Status" value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTSeverityInformational],
+                @(efsSMARTSeverityInformational),
             [me localizedStringForKey:@"Warning Status" value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTSeverityWarning],
+                @(efsSMARTSeverityWarning),
             [me localizedStringForKey:@"!! Critical Error !!" value:nil table:nil],
-                [NSNumber numberWithInt:efsSMARTSeverityCritical],
+                @(efsSMARTSeverityCritical),
             nil];
         eulock(e_lock);
     }
@@ -262,15 +264,15 @@ fssmart_lookup:
     // Once allocated, the tables are considered read-only
     statusStr = nil;
     if (status < efsSMARTStatusMax)
-        statusStr = [e_SMARTDescrip objectForKey:[NSNumber numberWithInt:status]];
-    severityStr = [e_SMARTSeverityDescrip objectForKey:[NSNumber numberWithInt:severity]];
+        statusStr = e_SMARTDescrip[@(status)];
+    severityStr = e_SMARTSeverityDescrip[@(severity)];
     
     info = [NSDictionary dictionaryWithObjectsAndKeys:
-        [NSNumber numberWithInt:status], ExtFSMediaKeySMARTStatus,
-        [NSNumber numberWithInt:severity], ExtFSMediaKeySMARTStatusSeverity,
-        severityStr, ExtFSMediaKeySMARTStatusSeverityDescription,
-        statusStr, (statusStr ? ExtFSMediaKeySMARTStatusDescription : nil),
-        nil];
+            @(status), ExtFSMediaKeySMARTStatus,
+            @(severity), ExtFSMediaKeySMARTStatusSeverity,
+            severityStr, ExtFSMediaKeySMARTStatusSeverityDescription,
+            statusStr, (statusStr ? ExtFSMediaKeySMARTStatusDescription : nil),
+            nil];
     
     return (info);
 }
@@ -282,9 +284,9 @@ fssmart_lookup:
     
     e_smonActive = YES;
     if ([args count] > 0)
-        flags = [[args objectAtIndex:0] unsignedLongValue];
+        flags = [args[0] unsignedIntegerValue];
     do {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+        @autoreleasepool {
         NSArray *media = [self mediaWithIOTransportBus:efsIOTransportTypeATA];
         NSEnumerator *en;
         ExtFSMedia *obj;
@@ -302,8 +304,7 @@ fssmart_lookup:
             }
         }
         
-        [pool release];
-        
+        }
         usleep(e_smonPollInterval * 1000);
     } while (0 != e_smonPollInterval);
     [tpool release];
@@ -314,7 +315,7 @@ fssmart_lookup:
 - (BOOL)monitorSMARTStatusWithPollInterval:(u_int64_t)interval flags:(ExtFSSMARTEventFlag)flags
 {
     if (interval != 0 && NO == e_smonActive) {
-        NSArray *args = [[NSArray alloc] initWithObjects:[NSNumber numberWithUnsignedLong:flags], nil];
+        NSArray *args = [[NSArray alloc] initWithObjects:@(flags), nil];
         e_smonPollInterval = interval;
         [NSThread  detachNewThreadSelector:@selector(monitorSMARTStatusThread:) toTarget:self withObject:args];
         [args release];

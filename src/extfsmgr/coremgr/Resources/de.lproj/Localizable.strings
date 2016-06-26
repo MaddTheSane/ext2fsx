@@ -29,7 +29,7 @@
 "Virtual" = "Virtuell";
 /******* S.M.A.R.T Descriptions *******/
 "!! Critical Error !!" = "!! Kritischer Fehler !!";
-"A disk electrical failure was detected! " "Es gibt ein Problem mit der Festplatten-Elektronik! ";
+"A disk electrical failure was detected! " = "Es gibt ein Problem mit der Festplatten-Elektronik! ";
 "A disk motor failure was detected! " = "Es gibt ein Problem mit dem Festplatten-Motor! ";
 "A disk read failure was detected! " = "Ein Festplatten-Lesefehler trat auf! ";
 "A fatal disk error was detected! " = "Ein nicht zu behebender Festplatten-Fehler trat auf! ";
@@ -43,3 +43,6 @@
 "The disk test is currently in progress." = "Die Festplatten-Überprüfung wird derzeit durchgeführt.";
 "The status query failed due to an OS error." = "Die Status-Abfrage schlug aufgrund eines Betriebssystem-Fehlers fehl.";
 "Warning Status" = "Warnungs-Status";
+
+"PCI-e" = "PCIe";
+"SecureDigital" = "Secure Digital";

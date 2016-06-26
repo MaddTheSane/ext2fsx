@@ -42,22 +42,28 @@
 @constant fsTypeNTFS NTFS filesystem id.
 @constant fsTypeUnknown Unknown filesystem id.
 */
-typedef enum {
+typedef NS_ENUM(NSInteger, ExtFSType) {
    fsTypeExt2 = 0,
-   fsTypeExt3 = 1,
-   fsTypeHFS  = 2,
-   fsTypeHFSPlus = 3,
-   fsTypeHFSJ = 4,
-   fsTypeHFSX = 5,
-   fsTypeUFS  = 6,
-   fsTypeCD9660 = 7,
-   fsTypeCDAudio = 8,
-   fsTypeUDF   = 9,
-   fsTypeMSDOS = 10,
-   fsTypeNTFS  = 11,
-   fsTypeUnknown = 12,
+   fsTypeExt3,
+   fsTypeExt4,
+   fsTypeHFS,
+   fsTypeHFSPlus,
+   fsTypeHFSJ,
+   fsTypeHFSX,
+   fsTypeUFS,
+   fsTypeCD9660,
+   fsTypeCDAudio,
+   fsTypeUDF,
+   fsTypeMSDOS,
+   fsTypeNTFS,
+   fsTypeExFat,
+   fsTypeZFS,
+   fsTypeXFS,
+   fsTypeReiserFS,
+   fsTypeReiser4,
+   fsTypeUnknown,
    fsTypeNULL
-}ExtFSType;
+};
 
 /*!
 @enum ExtFSType
@@ -74,20 +80,22 @@ typedef enum {
 @constant efsIOTransportTypeFibreChannel FibreChannel bus transport id.
 @constant efsIOTransportTypeUnknown Unknown bus transport id.
 */
-typedef enum {
-    efsIOTransportTypeInternal = (1<<0),
-    efsIOTransportTypeExternal = (1<<1),
-    efsIOTransportTypeVirtual  = (1<<2),
-    efsIOTransportTypeATA      = (1<<8),
-    efsIOTransportTypeATAPI    = (1<<9),
-    efsIOTransportTypeFirewire = (1<<10),
-    efsIOTransportTypeUSB      = (1<<11),
-    efsIOTransportTypeSCSI     = (1<<12),
-    efsIOTransportTypeImage    = (1<<13),
-    efsIOTransportTypeSATA     = (1<<14),
-    efsIOTransportTypeFibreChannel = (1<<15),
-    efsIOTransportTypeUnknown  = (1<<31)
-}ExtFSIOTransportType;
+typedef NS_OPTIONS(NSUInteger, ExtFSIOTransportType) {
+   efsIOTransportTypeInternal = (1<<0),
+   efsIOTransportTypeExternal = (1<<1),
+   efsIOTransportTypeVirtual  = (1<<2),
+   efsIOTransportTypeATA      = (1<<8),
+   efsIOTransportTypeATAPI    = (1<<9),
+   efsIOTransportTypeFirewire = (1<<10),
+   efsIOTransportTypeUSB      = (1<<11),
+   efsIOTransportTypeSCSI     = (1<<12),
+   efsIOTransportTypeImage    = (1<<13),
+   efsIOTransportTypeSATA     = (1<<14),
+   efsIOTransportTypeFibreChannel = (1<<15),
+   efsIOTransportTypePCIe     = (1<<16),
+   efsIOTransportTypeSD       = (1<<17),
+   efsIOTransportTypeUnknown  = (1<<31)
+};
 
 /*!
 @enum ExtFSOpticalMediaType
@@ -103,20 +111,29 @@ typedef enum {
 @constant efsOpticalTypeDVDRAM DVD-RAM
 @constant efsOpticalTypeUnknown Unknown optical disc.
 */
-typedef enum {
-    efsOpticalTypeCD        = 0,
-    efsOpticalTypeCDR       = 1,
-    efsOpticalTypeCDRW      = 2,
-    efsOpticalTypeDVD       = 3,
-    efsOpticalTypeDVDDashR  = 4,
-    efsOpticalTypeDVDDashRW = 5,
-    efsOpticalTypeDVDPlusR  = 6,
-    efsOpticalTypeDVDPlusRW = 7,
-    efsOpticalTypeDVDRAM    = 8,
-    
-    efsOpticalTypeUnknown   = 32767
-    
-}ExtFSOpticalMediaType;
+typedef NS_ENUM(short, ExtFSOpticalMediaType) {
+   efsOpticalTypeCD = 0,
+   efsOpticalTypeCDR,
+   efsOpticalTypeCDRW,
+   
+   efsOpticalTypeDVD,
+   efsOpticalTypeDVDDashR,
+   efsOpticalTypeDVDDashRW,
+   efsOpticalTypeDVDPlusR,
+   efsOpticalTypeDVDPlusRW,
+   efsOpticalTypeDVDRAM,
+   
+   efsOpticalTypeHDDVD,
+   efsOpticalTypeHDDVDR,
+   efsOpticalTypeHDDVDRW,
+   efsOpticalTypeHDDVDRAM,
+   
+   efsOpticalTypeBD,
+   efsOpticalTypeBDR,
+   efsOpticalTypeBDRE,
+   
+   efsOpticalTypeUnknown   = 32767
+};
 
 static __inline__ BOOL
 IsOpticalCDMedia(ExtFSOpticalMediaType type)
@@ -130,8 +147,17 @@ IsOpticalDVDMedia(ExtFSOpticalMediaType type)
     return (type >= efsOpticalTypeDVD && type <= efsOpticalTypeDVDRAM);
 }
 
-// Forward declaration for an ExtFSMedia private type.
-struct superblock;
+static __inline__ BOOL
+IsOpticalHDDVDMedia(ExtFSOpticalMediaType type)
+{
+	return (type >= efsOpticalTypeHDDVD && type <= efsOpticalTypeHDDVDRAM);
+}
+
+static __inline__ BOOL
+IsOpticalBDMedia(ExtFSOpticalMediaType type)
+{
+   return (type >= efsOpticalTypeBD && type <= efsOpticalTypeBDRE);
+}
 
 /*!
 @class ExtFSMedia
@@ -143,27 +169,6 @@ a filesystem or device for its properties.
 {
 @protected
     NSDictionary *e_probedAttributes;
-@private
-   void *e_lock; // lock storage
-   ExtFSMedia *e_parent;
-   id e_children;
-   
-   id e_media, e_iconDesc, e_object;
-   NSString *e_where, *e_ioregName, *e_volName, *e_uuid, *e_bsdName;
-   struct superblock *e_sb;
-   u_int64_t e_size, e_blockCount, e_blockAvail;
-   u_int32_t e_devBlockSize, e_fsBlockSize, e_attributeFlags,
-      e_volCaps, e_lastFSUpdate, e_fileCount, e_dirCount;
-   ExtFSType e_fsType;
-   ExtFSIOTransportType e_ioTransport;
-   NSImage *e_icon;
-   ExtFSOpticalMediaType e_opticalType;
-   unsigned int e_smartService;
-   u_int32_t e_lastSMARTUpdate;
-   int e_smartStatus;
-#ifndef NOEXT2
-   unsigned char e_reserved[32];
-#endif
 }
 
 /*!
@@ -174,26 +179,22 @@ from the IO Registry.
 @result A new ExtFSMedia object or nil if there was an error.
 The object will be returned auto-released.
 */
-- (ExtFSMedia*)initWithIORegProperties:(NSDictionary*)properties;
+- (instancetype)initWithIORegProperties:(NSDictionary*)properties;
 
 /*!
-@method representedObject
-@abstract Access associated context object.
-@result Context object or nil if a context object
-has not been set.
-*/
-- (id)representedObject;
-/*!
-@method setRepresentedObject
-@abstract Associate some object with the target ExtFSMedia object.
-@discussion The represented object is retained for the lifetime
-of the media object (or until replaced). Call with object == nil
-to release the represented object manually.
-*/
-- (void)setRepresentedObject:(id)object;
+ @property representedObject
+ @abstract Access associated context object.
+ @result Context object or nil if a context object
+ has not been set.
+ @discussion The represented object is retained for the lifetime
+ of the media object (or until replaced). Call with object == nil
+ to release the represented object manually.
+
+ */
+@property (retain) id representedObject;
 
 /*!
-@method parent
+@property parent
 @abstract Access the parent of the target object.
 @discussion The parent object is determined from the IO Registry
 hierarchy.
@@ -201,9 +202,9 @@ hierarchy.
 the target object -- nil is returned if the target has
 no parent.
 */
-- (ExtFSMedia*)parent;
+@property (readonly, assign) ExtFSMedia *parent;
 /*!
-@method children
+@property children
 @abstract Access the children of the target object.
 @discussion Children are determined from the IO Registry hierarchy.
 This is a snapshot in time, the number of children
@@ -212,212 +213,212 @@ could possibly change the moment after return.
 from the target object -- nil is returned if the target has
 no descendants.
 */
-- (NSArray*)children;
+@property (readonly, copy) NSArray *children;
 /*!
-@method childCount
+@property childCount
 @abstract Convenience method to obtain the child count of the target.
 @discussion This is a snapshot in time, the number of children
 could possibly change the moment after return.
 @result Integer containing the number of children.
 */
-- (unsigned)childCount;
+@property (readonly) NSUInteger childCount;
 
 /* Device */
 /*!
-@method ioRegistryName
+@property ioRegistryName
 @abstract Access the name of the object as the IO Registry
 identifies it.
 @result String containing the IOKit name.
 */
-- (NSString*)ioRegistryName;
+@property (readonly, copy) NSString *ioRegistryName;
 /*!
-@method bsdName
+@property bsdName
 @abstract Access the device name of the object as the
 BSD kernel identifies it.
 @result String containing the kernel device name.
 */
-- (NSString*)bsdName;
+@property (readonly, copy) NSString *bsdName;
 
 /*!
-@method icon
+@property icon
 @abstract Access the icon of the object as determined by the IO Registry.
 @result Preferred device image for the target object.
 */
-- (NSImage*)icon;
+@property (readonly, copy) NSImage *icon;
 
 /*!
-@method isEjectable
+@property ejectable
 @abstract Determine if the media is ejectable from its enclosure.
 @result YES if the media can be ejected, otherwise NO.
 */
-- (BOOL)isEjectable;
+@property (readonly, getter=isEjectable) BOOL ejectable;
 /*!
-@method canMount
+@property canMount
 @abstract Determine if the media is mountable.
 @result YES if the media can be mounted, otherwise NO.
 */
-- (BOOL)canMount;
+@property (readonly) BOOL canMount;
 /*!
-@method isMounted
+@property mounted
 @abstract Determine if the media is currently mounted.
 @result YES if the filesystem on the device is currently mounted, otherwise NO.
 */
-- (BOOL)isMounted;
+@property (getter=isMounted, readonly) BOOL mounted;
 /*!
-@method isWritable
+@property writable
 @abstract Determine if the media/filesystem is writable.
 @discussion If the media is mounted, then this applies to
 the filesystem only. Otherwise, it applies only to the media.
 @result YES if the filesystem or media is writable, otherwise NO.
 */
-- (BOOL)isWritable;
+@property (getter=isWritable, readonly) BOOL writable;
 /*!
-@method isWholeDisk
+@property wholeDisk
 @abstract Determine if the target object represents the media
 as a whole (ie the total disk, not a partition of the disk).
 @result YES or NO.
 */
-- (BOOL)isWholeDisk;
+@property (getter=isWholeDisk, readonly) BOOL wholeDisk;
 /*!
-@method isLeafDisk
+@property leafDisk
 @abstract Determine if the media contains any partitions.
 @result YES if the media does not contain partitions, otherwise NO.
 */
-- (BOOL)isLeafDisk;
+@property (getter=isLeafDisk, readonly) BOOL leafDisk;
 /*!
-@method isOptical
+@property optical
 @abstract Determine if the media is any type of optical disc.
 @result YES if the media is an optical disc, otherwise NO.
 */
-- (BOOL)isOptical;
+@property (getter=isOptical, readonly) BOOL optical;
 /*!
-@method opticalMediaType
+@property opticalMediaType
 @abstract Determine specific optical media type.
 @discussion If the media is not an optical disc, efsOpticalTypeUnknown is always returned.
 @result Type of media.
 */
-- (ExtFSOpticalMediaType)opticalMediaType;
+@property (readonly) ExtFSOpticalMediaType opticalMediaType;
 /*!
-@method usesDiskArb
+@property usesDiskArbitration
 @abstract Determine if the media is managed by the Disk Arbitration
 daemon.
 @result YES if the media is DA managed, otherwise NO.
 */
-- (BOOL)usesDiskArb;
+@property (readonly, getter=usesDiskArb) BOOL usesDiskArbitration;
 /*!
-@method size
+@property size
 @abstract Determine the size of the filesystem or media.
 @discussion If the media is mounted, then this applies to
 the filesystem only. Otherwise, it applies only to the media.
 @result Size of the filesystem or media in bytes.
 */
-- (u_int64_t)size; /* bytes */
+@property (readonly) u_int64_t size; /* bytes */
 /*!
-@method blockSize
+@property blockSize
 @abstract Determine the block size of the filesystem or media.
 @discussion If the media is mounted, then this applies to
 the filesystem only. Otherwise, it applies only to the media.
 @result Size of the filesystem or media block size in bytes.
 */
-- (u_int32_t)blockSize;
+@property (readonly) u_int32_t blockSize;
 
 /*!
-@method fsType
+@property fsType
 @abstract Determine the filesystem type.
 @discussion If the media is not mounted, the result may
 be fsTypeUnknown.
 @result The filesystem type id.
 */
-- (ExtFSType)fsType;
+@property (readonly) ExtFSType fsType;
 /*!
-@method fsName
+@property fsName
 @abstract Get the filesystem name in a format suitable for display to a user.
 @discussion If the media is not mounted, the result will always
 be nil.
 @result The filesystem name or nil if there was an error.
 */
-- (NSString*)fsName;
+@property (readonly, copy) NSString *fsName;
 /*!
-@method mountPoint
+@property mountPoint
 @abstract Determine the directory that the filesystem is mounted on.
 @result String containing mount path, or nil if the media is not mounted.
 */
-- (NSString*)mountPoint;
+@property (readonly, copy) NSString *mountPoint;
 /*!
-@method availableSize
+@property availableSize
 @abstract Determine the filesystem's available space.
 @result Size of available space in bytes. Always 0 if the filesystem is
 not mounted.
 */
-- (u_int64_t)availableSize;
+@property (readonly) u_int64_t availableSize;
 /*!
-@method blockCount
+@property blockCount
 @abstract Determine the block count of the filesystem or media.
 @discussion If the media is mounted, then this applies to
 the filesystem only. Otherwise, it applies only to the media.
 @result Number of blocks in the filesystem or media.
 */
-- (u_int64_t)blockCount;
+@property (readonly) u_int64_t blockCount;
 /*!
-@method fileCount
+@property fileCount
 @abstract Determine the number of files in the filesystem.
 @result The number of files, or 0 if the media is not mounted.
 */
-- (u_int64_t)fileCount;
+@property (readonly) u_int64_t fileCount;
 /*!
-@method dirCount
+@property dirCount
 @abstract Determine the number of directories in the filesystem.
 @discussion The filesystem must support the getattrlist() sys call or
 0 will be returned.
 @result The number of directories, or 0 if the media is not mounted.
 */
-- (u_int64_t)dirCount;
+@property (readonly) u_int64_t dirCount;
 /*!
-@method volName
+@property volName
 @abstract Get the filesystem name.
 @result String containing the filesystem name or nil if it
 cannot be determined (ie the media is not mounted).
 */
-- (NSString*)volName;
+@property (readonly, copy) NSString *volName;
 /*!
-@method hasPermissions
+@property hasPermissions
 @abstract Determine if filesystem permissions are in effect.
 @result YES if permissions are active, otherwise NO.
 Always NO if the media is not mounted.
 */
-- (BOOL)hasPermissions;
+@property (readonly) BOOL hasPermissions;
 /*!
-@method hasJournal
+@property hasJournal
 @abstract Determine if the filesystem has a journal log.
 @result YES if a journal is present, otherwise NO.
 Always NO if the media is not mounted.
 */
-- (BOOL)hasJournal;
+@property (readonly) BOOL hasJournal;
 /*!
-@method isJournaled
+@property journaled
 @abstract Determine if the filesystem journal is active.
 @discussion A filesystem may have a journal on disk, but it
 may not be currently in use.
 @result YES if the journal is active, otherwise NO.
 Always NO if the media is not mounted.
 */
-- (BOOL)isJournaled;
+@property (getter=isJournaled, readonly) BOOL journaled;
 /*!
-@method isCaseSensitive
+@property caseSensitive
 @abstract Determine if the filesystem uses case-sensitive file names.
 @result YES or NO. Always NO if the media is not mounted.
 */
-- (BOOL)isCaseSensitive;
+@property (getter=isCaseSensitive, readonly) BOOL caseSensitive;
 /*!
-@method isCasePreserving
+@property casePreserving
 @abstract Determine if the filesystem preserves file name case.
 @discussion HFS is case-preserving, but not case-sensitive, 
 Ext2 and UFS are both and FAT12/16 are neither.
 @result YES or NO. Always NO if the media is not mounted.
 */
-- (BOOL)isCasePreserving;
+@property (getter=isCasePreserving, readonly) BOOL casePreserving;
 /*!
-@method hasSparseFiles
+@property hasSparseFiles
 @abstract Determine if the filesystem supports sparse files.
 @discussion Sparse files are files with "holes" in them, the filesystem
 will automatically return zero's when these "holes" are accessed. HFS does
@@ -425,72 +426,72 @@ not support sparse files, while Ext2 and UFS do.
 @result YES if sparse files are supported, otherwise NO.
 Always NO if the media is not mounted.
 */
-- (BOOL)hasSparseFiles;
+@property (readonly) BOOL hasSparseFiles;
 /*!
-@method isBlessed
+@property blessed
 @abstract Determine if the volume contains an OS X blessed folder (always false for non-HFS+).
 @result True if the volume is blessed (bootable).
 */
-- (BOOL)isBlessed;
+@property (getter=isBlessed, readonly) BOOL blessed;
 
 /*!
-@method isExtFS
+@property extFS
 @abstract Convenience method to determine if a filesystem is Ext2 or Ext3.
 @result YES if the filesystem is Ext2/3, otherwise NO.
 */
-- (BOOL)isExtFS;
+@property (getter=isExtFS, readonly) BOOL extFS;
 /*!
-@method uuidString
+@property uuidString
 @abstract Get the filesystem UUID as a string.
 @discussion This is only supported by Ext2/3 and UFS currrently.
 @result String containing UUID or nil if a UUID is not present.
 This may be nil if the media is not mounted.
 */
-- (NSString*)uuidString;
+@property (readonly, copy) NSString *uuidString;
 /*!
-@method hasIndexedDirs
+@property hasIndexedDirs
 @abstract Determine if directory indexing is active.
 @discussion Directory indexing is an Ext2/3 specific option.
 It greatly speeds up file name lookup for large directories.
 @result YES if indexing is active, otherwise NO.
 Always NO if the media is not mounted or the filesystem is not Ext2/3.
 */
-- (BOOL)hasIndexedDirs;
+@property (readonly) BOOL hasIndexedDirs;
 /*!
-@method hasLargeFiles
+@property hasLargeFiles
 @abstract Determine if the filesystem supports large files (> 2GB).
 @discussion This only works with Ext2/3 filesystems currently.
 @result YES if large files are supported, otherwise NO.
 Always NO if the media is not mounted or the filesystem is not Ext2/3.
 */
-- (BOOL)hasLargeFiles;
+@property (readonly) BOOL hasLargeFiles;
 /*!
-@method maxFileSize
+@property maxFileSize
 @abstract Determine the max file size supported by the filesystem.
 @discussion Currently, this method always returns 0.
 @result Max file size or 0 if the filesystem is not mounted.
 */
-- (u_int64_t)maxFileSize;
+@property (readonly) u_int64_t maxFileSize;
 
 /*!
-@method transportType
+@property transportType
 @abstract Determine how the device is connected.
 @result An ExtFSConnectionType id.
 */
-- (ExtFSIOTransportType)transportType;
+@property (readonly) ExtFSIOTransportType transportType;
 /*!
-@method transportBus
+@property transportBus
 @abstract Determine the type of bus the device is connected to.
 @result An ExtFSConnectionType id.
 */
-- (ExtFSIOTransportType)transportBus;
+@property (readonly) ExtFSIOTransportType transportBus;
 /*!
-@method transportName
+@property transportName
 @abstract Determine the name of the device bus.
 @result A string containing a name suitable for display to a user
 or nil if there was an error.
 */
-- (NSString*)transportName;
+@property (readonly, copy) NSString *transportName;
 
 /*!
 @method compare:
@@ -558,7 +559,7 @@ extern NSString * const ExtFSMediaNotificationChildChange;
 @defined NSSTR
 @abstract Convenience macro to convert a C string to an NSString.
 */
-#define NSSTR(cstr) [NSString stringWithUTF8String:(cstr)]
+#define NSSTR(cstr) @(cstr)
 
 #define EPROBE_KEY_NAME @"name"
 #define EPROBE_KEY_UUID @"uuid"

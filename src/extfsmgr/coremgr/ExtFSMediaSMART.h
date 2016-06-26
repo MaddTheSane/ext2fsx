@@ -43,7 +43,7 @@
 @constant efsSMARTTestServoFail A disk motor failure was detected.
 @constant efsSMARTTestReadFail A disk read failure was detected.
 */
-typedef enum {
+typedef NS_ENUM(NSInteger, ExtFSMARTStatus) {
     efsSMARTInvalidTransport = -2,
     efsSMARTOSError          = -1,
     efsSMARTVerified         = 0,
@@ -56,7 +56,7 @@ typedef enum {
     efsSMARTTestServoFail    = 23,
     efsSMARTTestReadFail     = 24,
     efsSMARTStatusMax
-}ExtFSMARTStatus;
+};
 
 /*!
 @enum ExtFSMARTStatusSeverity
@@ -64,22 +64,22 @@ typedef enum {
 @constant efsSMARTSeverityWarning The S.M.A.R.T. status is a possible error condition.
 @constant efsSMARTSeverityCritical The S.M.A.R.T. status is a critical error condition, and disk failure is imminent.
 */
-typedef enum {
+typedef NS_ENUM(NSInteger, ExtFSMARTStatusSeverity) {
     efsSMARTSeverityInformational = 0,
     efsSMARTSeverityWarning       = 1,
     efsSMARTSeverityCritical      = 2,
     efsSMARTSeverityMax
-}ExtFSMARTStatusSeverity;
+};
 
 /*!
 @enum ExtFSSMARTEventFlag
 @constant efsSMARTEventFailed Only failure notifications should be sent.
 @constant efsSMARTEventVerified Verification notifications should be sent in addition to failure notifications.
 */
-typedef enum {
+typedef NS_OPTIONS(NSUInteger, ExtFSSMARTEventFlag) {
     efsSMARTEventFailed   = 0,
     efsSMARTEventVerified = (1<<0)
-}ExtFSSMARTEventFlag;
+};
 
 /*!
 @category ExtFSMedia (ExtFSMediaSMART)
@@ -88,13 +88,13 @@ typedef enum {
 @interface ExtFSMedia (ExtFSMediaSMART)
 
 /*!
-@method SMARTStatus
+@property SMARTStatus
 @abstract Obtain the S.M.A.R.T. status of the object.
 @discussion This is a convenience method. For more information
 see [ExtFSMediaController(ExtFSMediaControllerSMART) SMARTStatusForMedia:parentDisk:].
 @result An ExtFSMARTStatus status code.
 */
-- (ExtFSMARTStatus)SMARTStatus;
+@property (readonly) ExtFSMARTStatus SMARTStatus;
 
 @end
 
@@ -125,7 +125,7 @@ query that for its S.M.A.R.T. status.
 @method SMARTStatusDescription:
 @abstract Given a ExtFSMARTStatus code, create a dictionary containing
 information that can be presented to a user.
-@param ExtFSMARTStatus code.
+@param status code.
 @result A dictionary, containing one or more ExtFSMediaKeySMARTStatus* keys.
 */
 - (NSDictionary*)SMARTStatusDescription:(ExtFSMARTStatus)status;

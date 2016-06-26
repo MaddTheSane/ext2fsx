@@ -27,33 +27,33 @@
 
 @class ExtFSMedia;
 
-@interface ExtFSManager : NSPreferencePane
+@interface ExtFSManager : NSPreferencePane <NSOutlineViewDataSource, NSOutlineViewDelegate>
 {
-   IBOutlet NSButton *e_mountButton;
-   IBOutlet NSButton *e_ejectButton;
-   IBOutlet NSButton *e_infoButton;
-   IBOutlet NSImageView *e_diskIconView;
-   IBOutlet NSOutlineView *e_vollist;
-   IBOutlet NSTabView *e_tabs;
-   
-   IBOutlet id e_mountReadOnlyBox;
-   IBOutlet id e_dontAutomountBox;
-   IBOutlet id e_ignorePermsBox;
-   IBOutlet id e_indexedDirsBox;
-   IBOutlet id e_optionNoteText;
-   
-   IBOutlet id e_copyrightText;
-   IBOutlet id e_infoText;
-   
-   IBOutlet id e_startupProgress;
-   IBOutlet id e_startupText;
-   
-   IBOutlet id e_opProgress;
-   
-   id e_volData, e_curSelection;
+   NSMutableArray *e_volData;
+   __weak ExtFSMedia *e_curSelection;
    NSString *donateTitle;
    BOOL e_infoButtonAlt;
 }
+@property (weak) IBOutlet NSButton *e_mountButton;
+@property (weak) IBOutlet NSButton *e_ejectButton;
+@property (weak) IBOutlet NSButton *e_infoButton;
+@property (weak) IBOutlet NSImageView *e_diskIconView;
+@property (weak) IBOutlet NSOutlineView *e_vollist;
+@property (weak) IBOutlet NSTabView *e_tabs;
+
+@property (weak) IBOutlet NSButton *e_mountReadOnlyBox;
+@property (weak) IBOutlet NSButton *e_dontAutomountBox;
+@property (weak) IBOutlet NSButton *e_ignorePermsBox;
+@property (weak) IBOutlet NSButton *e_indexedDirsBox;
+@property (weak) IBOutlet NSTextField *e_optionNoteText;
+
+@property (weak) IBOutlet NSTextField *e_copyrightText;
+@property (unsafe_unretained) IBOutlet NSTextView *e_infoText;
+
+@property (weak) IBOutlet NSProgressIndicator *e_startupProgress;
+@property (weak) IBOutlet NSTextField *e_startupText;
+
+@property (weak) IBOutlet NSProgressIndicator *e_opProgress;
 
 - (IBAction)click_readOnly:(id)sender;
 - (IBAction)click_automount:(id)sender;
@@ -68,13 +68,6 @@
 - (void)savePrefs;
 
 - (void)doMediaSelection:(ExtFSMedia*)media;
-
-/* Delegate stuff */
-- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item;
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;
-- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
-- (id)outlineView:(NSOutlineView *)outlineView
-   objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
 
 @end
 

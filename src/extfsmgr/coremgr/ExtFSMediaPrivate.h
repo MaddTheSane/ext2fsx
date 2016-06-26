@@ -29,6 +29,17 @@
 
 #import "ExtFSMedia.h"
 #import "ExtFSMediaController.h"
+#include <sys/mount.h>
+
+enum ExtFSMediaFlags : uint32_t;
+
+@interface ExtFSMediaController ()
+{
+@private
+	void *e_lock;
+
+}
+@end
 
 @interface ExtFSMediaController (Private)
 - (void)postNotification:(NSArray*)args;
@@ -46,6 +57,34 @@ withObject:args waitUntilDone:NO]; \
 #define EXTFS_DM_BNDL_ID @"net.sourceforge.ext2fsx.ExtFSDiskManager"
 #endif
 #define EFS_PROBE_RSRC @"efsprobe"
+
+@interface ExtFSMedia ()
+{
+@private
+	void *e_lock;
+	time_t e_lastSMARTUpdate;
+	ExtFSMARTStatus e_smartStatus;
+	ExtFSIOTransportType e_ioTransport;
+	enum ExtFSMediaFlags e_attributeFlags;
+	NSString *e_ioregName;
+	ExtFSMedia *e_parent;
+	NSDictionary *e_iconDesc;
+	ExtFSOpticalMediaType e_opticalType;
+	NSDictionary *e_media;
+	NSString *e_where, *e_volName, *e_bsdName;
+	uint64_t e_size, e_blockCount, e_blockAvail;
+	uint32_t e_devBlockSize, e_fsBlockSize,
+	e_volCaps;
+	int64_t e_fileCount, e_dirCount;
+	time_t e_lastFSUpdate;
+	ExtFSType e_fsType;
+	NSImage* e_icon;
+	io_object_t e_smartService;
+}
+
+- (CFUUIDRef)uuid CF_RETURNS_RETAINED;
+
+@end
 
 @interface ExtFSMedia (ExtFSMediaControllerPrivate)
 - (BOOL)updateAttributesFromIOService:(io_service_t)service;
@@ -77,6 +116,9 @@ withObject:args waitUntilDone:NO]; \
 #ifndef EXT3FS_NAME
 #define EXT3FS_NAME "ext3"
 #endif
+#ifndef EXT4FS_NAME
+#define EXT4FS_NAME "ext4"
+#endif
 
 #define HFS_NAME "hfs"
 #define UFS_NAME "ufs"
@@ -85,6 +127,11 @@ withObject:args waitUntilDone:NO]; \
 #define UDF_NAME "udf"
 #define MSDOS_NAME "msdos"
 #define NTFS_NAME "ntfs"
+#define EXFAT_NAME "exfat"
+#define ZFS_NAME "zfs"
+#define XFS_NAME "xfs"
+#define REISERFS_NAME "rfs"
+#define REISER4_NAME "rfs4"
 
 #define efsIOTransportTypeMask 0x00000007
 #define efsIOTransportBusMask  0xFFFFFFF8
@@ -105,7 +152,7 @@ withObject:args waitUntilDone:NO]; \
 #ifdef DEBUG
 #define E2DiagLog NSLog
 #else
-#define E2DiagLog()
+#define E2DiagLog(...)
 #endif
 #endif
 
@@ -135,7 +182,7 @@ __private_extern__ void PantherInitSMART();
 @constant kfsNoMount Media cannot be mounted (partition map, driver partition, etc).
 @constant kfsPermsEnabled Filesystem permissions are in effect.
 */
-enum {
+typedef NS_OPTIONS(uint32_t, ExtFSMediaFlags) {
    kfsDiskArb		= (1<<0), /* Mount/unmount with Disk Arb */
    kfsMounted		= (1<<1),
    kfsWritable		= (1<<2),

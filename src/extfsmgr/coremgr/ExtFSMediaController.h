@@ -44,9 +44,7 @@ There should only be one instance of this class.
 */
 @interface ExtFSMediaController : NSObject <ExtFSMCP>
 {
-@private
-   void *e_lock;
-   id e_media;
+   NSMutableDictionary *e_media;
    id e_pending;
    id e_delegate;
    u_int64_t e_smonPollInterval;
@@ -66,30 +64,30 @@ it needs access to the main run-loop.
 + (ExtFSMediaController*)mediaController;
 
 /*!
-@method mediaCount
+@property mediaCount
 @abstract Determine the number of media objects.
 @discussion One media object is created for each
 disk and each partition on a disk. This is a snapshot in time,
 media could be added or removed the moment after return.
 @result Count of media objects.
 */
-- (unsigned)mediaCount;
+@property (readonly) NSUInteger mediaCount;
 /*!
-@method media
+@property media
 @abstract Access all media objects.
 @discussion This is a snapshot in time, media could be added
 or removed the moment after return.
 @result An array of media objects.
 */
-- (NSArray*)media;
+@property (readonly, copy) NSArray *media;
 /*!
-@method rootMedia
+@property rootMedia
 @abstract Access all media that is not a child of some other media.
 @discussion This is a snapshot in time, media could be added
 or removed the moment after return.
 @result An array of media objects.
 */
-- (NSArray*)rootMedia;
+@property (readonly, copy) NSArray *rootMedia;
 /*!
 @method mediaWithFSType
 @abstract Access all media with a specific filesystem type.
@@ -125,7 +123,7 @@ or removed the moment after return.
 before the mount has completed. If the mount fails later, a
 ExtFSMediaNotificationOpFailure notification will be sent.
 @param media Media to mount.
-@param on A string containing the absolute path to the directory the media should be mounted on.
+@param dir A string containing the absolute path to the directory the media should be mounted on.
 @result 0 if successful or an error code (possibly from Disk Arbitration).
 */
 - (int)mount:(ExtFSMedia*)media on:(NSString*)dir;
@@ -161,8 +159,7 @@ until you receive an ExtFSMediaNotificationExclusiveRequestDidComplete notificat
 - (ExtFSOpticalMediaType)opticalMediaTypeForName:(NSString*)name;
 - (NSString*)opticalMediaNameForType:(ExtFSOpticalMediaType)type;
 
-- (id)delegate;
-- (void)setDelegate:(id)obj;
+@property (retain) id delegate;
 
 #ifdef DIAGNOSTIC
 - (void)dumpState;
@@ -289,7 +286,7 @@ containing the filesystem name.
 @param type A valid ExtFSType id.
 @result Filesystem name or nil if the type is invalid.
 */
-const char* EFSNameFromType(int type);
+const char* EFSNameFromType(ExtFSType type);
 /*!
 @function EFSNSNameFromType
 @abstract Converts a filesystem type id to a NSString
@@ -297,7 +294,7 @@ containing the filesystem name.
 @param type A valid ExtFSType id.
 @result Filesystem name or nil if the type is invalid.
 */
-NSString* EFSNSNameFromType(unsigned long type);
+NSString* EFSNSNameFromType(ExtFSType type);
 
 /*!
 @function EFSNSPrettyNameFromType
@@ -307,7 +304,7 @@ to a user.
 @param type A valid ExtFSType id.
 @result Filesystem name or nil if the type is invalid.
 */
-NSString* EFSNSPrettyNameFromType(unsigned long type);
+NSString* EFSNSPrettyNameFromType(ExtFSType type);
 
 /*!
 @function EFSIOTransportNameFromType
