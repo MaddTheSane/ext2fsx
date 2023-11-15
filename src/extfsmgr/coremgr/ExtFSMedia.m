@@ -833,7 +833,7 @@ emicon_exit:
 {
    BOOL test;
    erlock(e_lock);
-   test = (e_fsType == fsTypeExt2 || e_fsType == fsTypeExt3);
+   test = (e_fsType == fsTypeExt2 || e_fsType == fsTypeExt3 || e_fsType == fsTypeExt4);
    eulock(e_lock);
    return (test);
 }
@@ -845,11 +845,11 @@ emicon_exit:
    
    uuid = [self uuid];
    if (uuid) {
-      str = (NSString*)CFUUIDCreateString(kCFAllocatorDefault, uuid);
+      str = CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid));
       CFRelease(uuid);
-      return ([str autorelease]);
+      return str;
    } else if (e_uuid) {
-      return ([[e_uuid retain] autorelease]);
+      return ([[e_uuid copy] autorelease]);
    }
    
    return (nil);

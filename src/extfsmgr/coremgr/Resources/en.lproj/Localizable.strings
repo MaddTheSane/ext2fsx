@@ -1,4 +1,4 @@
-﻿"CD Audio" = "CD Audio";
+"CD Audio" = "CD Audio";
 "Change Request" = "Change Request"; 
 "Device" = "Device"; 
 "Device is busy" = "Device is busy"; 
@@ -44,4 +44,6 @@
 "Warning Status" = "Warning Status";
 
 "PCI-e" = "PCIe";
+"PCI" = "PCI";
+"AppleFabric" = "Apple Fabric";
 "SecureDigital" = "Secure Digital";

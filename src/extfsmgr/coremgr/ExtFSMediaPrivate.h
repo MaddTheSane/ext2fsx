@@ -132,6 +132,7 @@ withObject:args waitUntilDone:NO]; \
 #define XFS_NAME "xfs"
 #define REISERFS_NAME "rfs"
 #define REISER4_NAME "rfs4"
+#define APFS_NAME "apfs"
 
 #define efsIOTransportTypeMask 0x00000007
 #define efsIOTransportBusMask  0xFFFFFFF8

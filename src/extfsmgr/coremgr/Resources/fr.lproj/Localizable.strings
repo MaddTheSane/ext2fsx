@@ -1,4 +1,4 @@
-﻿/* Attempted translation by Brian Bergstrand.
+/* Attempted translation by Brian Bergstrand.
    Pardon my French. Literally. It's quite horrible. Corrections are welcome.
    
    Pardon mon français. C'est mauvaise.
@@ -18,4 +18,6 @@
 "!! Critical Error !!" = "!! Critique Erreur !!";
 
 "PCI-e" = "PCIe";
+"PCI" = "PCI";
+"AppleFabric" = "Apple Fabric";
 "SecureDigital" = "Secure Digital";

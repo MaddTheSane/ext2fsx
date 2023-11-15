@@ -61,6 +61,7 @@ typedef NS_ENUM(NSInteger, ExtFSType) {
    fsTypeXFS,
    fsTypeReiserFS,
    fsTypeReiser4,
+   fsTypeAPFS,
    fsTypeUnknown,
    fsTypeNULL
 };
@@ -92,8 +93,10 @@ typedef NS_OPTIONS(NSUInteger, ExtFSIOTransportType) {
    efsIOTransportTypeImage    = (1<<13),
    efsIOTransportTypeSATA     = (1<<14),
    efsIOTransportTypeFibreChannel = (1<<15),
-   efsIOTransportTypePCIe     = (1<<16),
-   efsIOTransportTypeSD       = (1<<17),
+   efsIOTransportTypePCI      = (1<<16),
+   efsIOTransportTypePCIe     = (1<<17),
+   efsIOTransportTypeSD       = (1<<18),
+   efsIOTransportTypeAppleFabric = (1<<19),
    efsIOTransportTypeUnknown  = (1<<31)
 };
 
@@ -213,7 +216,7 @@ could possibly change the moment after return.
 from the target object -- nil is returned if the target has
 no descendants.
 */
-@property (readonly, copy) NSArray *children;
+@property (readonly, copy) NSArray<ExtFSMedia*> *children;
 /*!
 @property childCount
 @abstract Convenience method to obtain the child count of the target.
@@ -436,14 +439,14 @@ Always NO if the media is not mounted.
 
 /*!
 @property extFS
-@abstract Convenience method to determine if a filesystem is Ext2 or Ext3.
-@result YES if the filesystem is Ext2/3, otherwise NO.
+@abstract Convenience method to determine if a filesystem is Ext2, Ext3, or Ext4.
+@result \c YES if the filesystem is Ext2/3/4, otherwise NO.
 */
 @property (getter=isExtFS, readonly) BOOL extFS;
 /*!
 @property uuidString
 @abstract Get the filesystem UUID as a string.
-@discussion This is only supported by Ext2/3 and UFS currrently.
+@discussion This is only supported by Ext2/3/4 and UFS currrently.
 @result String containing UUID or nil if a UUID is not present.
 This may be nil if the media is not mounted.
 */
@@ -453,16 +456,16 @@ This may be nil if the media is not mounted.
 @abstract Determine if directory indexing is active.
 @discussion Directory indexing is an Ext2/3 specific option.
 It greatly speeds up file name lookup for large directories.
-@result YES if indexing is active, otherwise NO.
-Always NO if the media is not mounted or the filesystem is not Ext2/3.
+@result \c YES if indexing is active, otherwise NO.
+Always \c NO if the media is not mounted or the filesystem is not Ext2/3/4.
 */
 @property (readonly) BOOL hasIndexedDirs;
 /*!
 @property hasLargeFiles
 @abstract Determine if the filesystem supports large files (> 2GB).
-@discussion This only works with Ext2/3 filesystems currently.
+@discussion This only works with Ext2/3/4 filesystems currently.
 @result YES if large files are supported, otherwise NO.
-Always NO if the media is not mounted or the filesystem is not Ext2/3.
+Always NO if the media is not mounted or the filesystem is not Ext2/3/4.
 */
 @property (readonly) BOOL hasLargeFiles;
 /*!

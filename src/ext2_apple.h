@@ -222,7 +222,7 @@ int EVOP_DEVBLOCKSIZE(vnode_t vp, u_int32_t *size, vfs_context_t ctx) {
  *
  * Must call while holding kernel funnel for SMP safeness.
  */
-extern int e2securelevel() __attribute__((visibility("hidden")));
+extern int e2securelevel(void) __attribute__((visibility("hidden")));
 #define securelevel_gt(cr,level) ( e2securelevel > (level) ? EPERM : 0 )
 #define securelevel_ge(cr,level) ( e2securelevel >= (level) ? EPERM : 0 )
 

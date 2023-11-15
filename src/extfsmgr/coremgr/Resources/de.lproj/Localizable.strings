@@ -1,4 +1,4 @@
-﻿/* Translation: Sören Kuklau */
+/* Translation: Sören Kuklau */
 "CD Audio" = "CD-Audio";
 "Change Request" = "Änderungsanfrage";
 "Device" = "Gerät";
@@ -45,4 +45,6 @@
 "Warning Status" = "Warnungs-Status";
 
 "PCI-e" = "PCIe";
+"PCI" = "PCI";
+"AppleFabric" = "Apple Fabric";
 "SecureDigital" = "Secure Digital";

@@ -108,6 +108,7 @@ static const char *e_fsNames[] = {
    XFS_NAME,
    REISERFS_NAME,
    REISER4_NAME,
+   APFS_NAME,
    "Unknown",
    nil
 };
@@ -370,7 +371,7 @@ eulock(e_lock); \
 - (BOOL)allowMount:(NSString*)device
 {
     erlock(e_lock);
-    id delegate = [e_delegate retain];
+    id<ExtFSMediaControllerDelegate> delegate = [e_delegate retain];
     eulock(e_lock);
     
     (void)[delegate autorelease];
@@ -660,17 +661,17 @@ unmount_failed:
     return (opticalMediaNames[@(type)]);
 }
 
-- (id)delegate
+- (id<ExtFSMediaControllerDelegate>)delegate
 {
     erlock(e_lock);
-    id obj = [e_delegate retain];
+    id<ExtFSMediaControllerDelegate> obj = [e_delegate retain];
     eulock(e_lock);
     return ([obj autorelease]);
 }
 
-- (void)setDelegate:(id)obj
+- (void)setDelegate:(id<ExtFSMediaControllerDelegate>)obj
 {
-    id tmp = nil;
+    id<ExtFSMediaControllerDelegate> tmp = nil;
     ewlock(e_lock);
     if (obj != e_delegate) {
         tmp = e_delegate;
@@ -867,8 +868,10 @@ unmount_failed:
         @(efsIOTransportTypeImage),
             @kIOPropertyInterconnectFileKey,
                             
-        @(efsIOTransportTypePCIe), @kIOPropertyPhysicalInterconnectTypePCI,
+        @(efsIOTransportTypePCI), @kIOPropertyPhysicalInterconnectTypePCI,
+        @(efsIOTransportTypePCIe), @kIOPropertyPhysicalInterconnectTypePCIExpress,
         @(efsIOTransportTypeSD), @kIOPropertyPhysicalInterconnectTypeSecureDigital,
+        @(efsIOTransportTypeAppleFabric), @kIOPropertyPhysicalInterconnectTypeAppleFabric,
         nil];
     
    e_pending = [[NSMutableArray alloc] initWithCapacity:kPendingCount];
@@ -1024,6 +1027,7 @@ NSString* EFSNSPrettyNameFromType(ExtFSType type)
             @"ReiserFS", @(fsTypeReiserFS),
             @"Reiser 4", @(fsTypeReiser4),
             @"Linux Ext4 (Journaled)", @(fsTypeExt4),
+            @"Apple File System", @(fsTypeAPFS),
             [me localizedStringForKey:@"Unknown" value:nil table:nil],
                 @(fsTypeUnknown),
           nil];
@@ -1073,6 +1077,10 @@ NSString* EFSIOTransportNameFromType(unsigned long type)
             @kIOPropertyPhysicalInterconnectTypeSerialATA, @(efsIOTransportTypeSATA),
             [me localizedStringForKey:@"Disk Image" value:nil table:nil],
                 @(efsIOTransportTypeImage),
+            [me localizedStringForKey:@"PCI" value:nil table:nil],
+            @(efsIOTransportTypePCI),
+            [me localizedStringForKey:@"AppleFabric" value:nil table:nil],
+            @(efsIOTransportTypeAppleFabric),
             [me localizedStringForKey:@"PCI-e" value:nil table:nil],
             @(efsIOTransportTypePCIe),
             [me localizedStringForKey:@"SecureDigital" value:nil table:nil],
@@ -1125,7 +1133,7 @@ static void DiskArbCallback_UnmountNotification(DADiskRef disk,
    @autoreleasepool {
       if (NULL == dissenter) {
          (void)[[ExtFSMediaController mediaController] volumeDidUnmount:NSSTR(device)];
-         if (EXT2_DISK_EJECT == (unsigned)context)
+         if (EXT2_DISK_EJECT == (size_t)context)
             DADiskEject(disk, kDADiskEjectOptionDefault, DiskArbCallback_EjectNotification, NULL);
       } else
          DiskArb_CallFailed(device, kDiskArbUnmountRequestFailed,

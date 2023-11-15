@@ -26,7 +26,8 @@
 #import <Foundation/Foundation.h>
 
 @class ExtFSMedia;
-@protocol ExtFSMCP
+@protocol ExtFSMediaControllerDelegate;
+@protocol ExtFSMCP <NSObject>
 - (void)updateMountStatus;
 - (ExtFSMedia*)createMediaWithIOService:(io_service_t)service properties:(NSDictionary*)props;
 - (int)updateMedia:(io_iterator_t)iter remove:(BOOL)remove;
@@ -46,7 +47,7 @@ There should only be one instance of this class.
 {
    NSMutableDictionary *e_media;
    id e_pending;
-   id e_delegate;
+   id<ExtFSMediaControllerDelegate> e_delegate;
    u_int64_t e_smonPollInterval;
    BOOL e_smonActive;
 #ifndef NOEXT2
@@ -159,7 +160,7 @@ until you receive an ExtFSMediaNotificationExclusiveRequestDidComplete notificat
 - (ExtFSOpticalMediaType)opticalMediaTypeForName:(NSString*)name;
 - (NSString*)opticalMediaNameForType:(ExtFSOpticalMediaType)type;
 
-@property (retain) id delegate;
+@property (retain) id<ExtFSMediaControllerDelegate> delegate;
 
 #ifdef DIAGNOSTIC
 - (void)dumpState;
@@ -167,8 +168,8 @@ until you receive an ExtFSMediaNotificationExclusiveRequestDidComplete notificat
 
 @end
 
-@interface NSObject (ExtFSMediaControllerDelegate)
-
+@protocol ExtFSMediaControllerDelegate <NSObject>
+@optional
 - (BOOL)allowMediaToMount:(ExtFSMedia*)media;
 
 @end
