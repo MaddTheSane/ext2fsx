@@ -70,15 +70,18 @@ extern struct nchstats nchstats;
 #include <ext2_byteorder.h>
 
 #ifdef DIAGNOSTIC
-__private_extern__ int dirchk = 1;
-__private_extern__ u_int32_t lookcachehit = 0, lookwait = 0;
+extern int dirchk __attribute__((visibility("hidden")));
+int dirchk = 1;
+u_int32_t lookcachehit = 0, lookwait = 0;
 #define lookchit() OSIncrementAtomic((SInt32*)&lookcachehit)
 #else
-__private_extern__ int dirchk = 0;
+extern int dirchk __attribute__((visibility("hidden")));
+int dirchk = 0;
 #define lookchit()
 #endif
 
-__private_extern__ u_int32_t lookcacheinval = 0;
+extern u_int32_t lookcacheinval __attribute__((visibility("hidden")));
+u_int32_t lookcacheinval = 0;
 
 SYSCTL_NODE(_vfs, OID_AUTO, e2fs, CTLFLAG_RD, 0, "EXT2FS filesystem");
 SYSCTL_INT(_vfs_e2fs, EXT2_SYSCTL_INT_DIRCHECK, dircheck, CTLFLAG_RW, &dirchk, 0, "");
@@ -201,15 +204,14 @@ void ext2_dcacheremall(struct inode *dp)
  */
 #define a_ncookies a_numdirent
 int
-ext2_readdir(ap)
-   struct vnop_readdir_args /* {
-            vnode_t a_vp;
-            struct uio *a_uio;
-            int a_flags;
-            int *a_eofflag;
-            int *a_numdirent;
-            vfs_context_t a_context;
-   } */ *ap;
+ext2_readdir(struct vnop_readdir_args /* {
+									   vnode_t a_vp;
+			struct uio *a_uio;
+			int a_flags;
+			int *a_eofflag;
+			int *a_numdirent;
+			vfs_context_t a_context;
+   } */ *ap)
 {
     vfs_context_t context = ap->a_context;
     uio_t uio = ap->a_uio, auio = NULL;
@@ -975,13 +977,12 @@ found:
 }
 
 int
-ext2_lookup(ap)
-	struct vnop_lookup_args /* {
-		vnode_t a_dvp;
-		vnode_t *a_vpp;
-		struct componentname *a_cnp;
-        vfs_context_t a_context;
-	} */ *ap;
+ext2_lookup(struct vnop_lookup_args /* {
+									 vnode_t a_dvp;
+				vnode_t *a_vpp;
+				struct componentname *a_cnp;
+				vfs_context_t a_context;
+			} */ *ap)
 {
 	*ap->a_vpp = NULL;
     
@@ -1058,10 +1059,7 @@ dolookup:
 }
 
 void
-ext2_dirbad(ip, offset, how)
-	struct inode *ip;
-	doff_t offset;
-	char *how;
+ext2_dirbad(struct inode *ip, doff_t offset, char *how)
 {
 	mount_t  mp;
 
@@ -1084,12 +1082,9 @@ ext2_dirbad(ip, offset, how)
  *	changed so that it confirms to ext2_check_dir_entry
  */
 static int
-ext2_dirbadentry_locked(dp, de, entryoffsetinblock)
-	vnode_t dp;
-	struct ext2_dir_entry_2 *de;
-	int entryoffsetinblock;
+ext2_dirbadentry_locked(vnode_t dp, struct ext2_dir_entry_2 *de, int entryoffsetinblock)
 {
-	const int DIRBLKSIZ = VTOI(dp)->i_e2fs->s_blocksize;
+   const int DIRBLKSIZ = VTOI(dp)->i_e2fs->s_blocksize;
    const int rlen = le16_to_cpu(de->rec_len);
 
    char * error_msg = NULL;
@@ -1124,11 +1119,7 @@ ext2_dirbadentry_locked(dp, de, entryoffsetinblock)
  * entry is to be obtained.
  */
 int
-ext2_direnter(ip, dvp, cnp, context)
-	struct inode *ip;
-	vnode_t dvp;
-	struct componentname *cnp;
-    vfs_context_t context;
+ext2_direnter(struct inode *ip, vnode_t dvp, struct componentname *cnp, vfs_context_t context)
 {
 	off_t offset;
     struct ext2_dir_entry_2 *ep, *nep;
@@ -1416,10 +1407,7 @@ void e2copydcache(const struct dcache *dcp, struct inode *dp)
  * to the size of the previous entry.
  */
 int
-ext2_dirremove(dvp, cnp, context)
-	vnode_t dvp;
-	struct componentname *cnp;
-    vfs_context_t context;
+ext2_dirremove(vnode_t dvp, struct componentname *cnp, vfs_context_t context)
 {
 	struct inode *dp;
 	struct ext2_dir_entry_2 *ep;
@@ -1584,10 +1572,7 @@ ext2_dirremove(dvp, cnp, context)
  * set up by a call to namei.
  */
 int
-ext2_dirrewrite_nolock(dp, ip, cnp, context)
-	struct inode *dp, *ip;
-	struct componentname *cnp;
-    vfs_context_t context;
+ext2_dirrewrite_nolock(struct inode *dp, struct inode *ip, struct componentname *cnp, vfs_context_t context)
 {
 	buf_t  bp;
 	struct ext2_dir_entry_2 *ep;
@@ -1689,10 +1674,7 @@ ext2_dirrewrite_nolock(dp, ip, cnp, context)
  * NB: does not handle corrupted directories.
  */
 int
-ext2_dirempty(ip, parentino, cred)
-	struct inode *ip;
-	ino_t parentino;
-	struct ucred *cred;
+ext2_dirempty(struct inode *ip, ino_t parentino, struct ucred *cred)
 {
 	off_t off;
 	struct dirtemplate dbuf;
@@ -1745,9 +1727,7 @@ ext2_dirempty(ip, parentino, cred)
  * The target is always vput before returning.
  */
 int
-ext2_checkpath_nolock(source, target, vallocp)
-	struct inode *source, *target;
-	evalloc_args_t *vallocp;
+ext2_checkpath_nolock(struct inode *source, struct inode *target, evalloc_args_t *vallocp)
 {
 	vnode_t vp;
     vfs_context_t context = vallocp->va_vctx;

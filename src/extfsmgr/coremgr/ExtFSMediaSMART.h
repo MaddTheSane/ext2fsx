@@ -43,7 +43,7 @@
 @constant efsSMARTTestServoFail A disk motor failure was detected.
 @constant efsSMARTTestReadFail A disk read failure was detected.
 */
-typedef NS_ENUM(NSInteger, ExtFSMARTStatus) {
+typedef NS_ENUM(int, ExtFSMARTStatus) {
     efsSMARTInvalidTransport = -2,
     efsSMARTOSError          = -1,
     efsSMARTVerified         = 0,

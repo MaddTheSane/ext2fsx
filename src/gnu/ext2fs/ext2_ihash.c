@@ -91,9 +91,7 @@ ext2_ihashuninit()
  * to it. If it is in core, return it, even if it is locked.
  */
 vnode_t 
-ext2_ihashlookup(dev, inum)
-	dev_t dev;
-	ino_t inum;
+ext2_ihashlookup(dev_t dev, ino_t inum)
 {
 	struct inode *ip;
 
@@ -113,11 +111,7 @@ ext2_ihashlookup(dev, inum)
  * to it. If it is in core, but locked, wait for it.
  */
 int
-ext2_ihashget(dev, inum, flags, vpp)
-	dev_t dev;
-	ino_t inum;
-	int flags;
-	vnode_t *vpp;
+ext2_ihashget(dev_t dev, ino_t inum, int flags, vnode_t *vpp)
 {
 	struct inode *ip;
 	vnode_t vp;
@@ -168,8 +162,7 @@ loop:
  * Insert the inode into the hash table, and return it locked.
  */
 void
-ext2_ihashins(ip)
-	struct inode *ip;
+ext2_ihashins(struct inode *ip)
 {
 	struct ihashhead *ipp;
 
@@ -184,8 +177,7 @@ ext2_ihashins(ip)
  * Remove the inode from the hash table.
  */
 void
-ext2_ihashrem(ip)
-	struct inode *ip;
+ext2_ihashrem(struct inode *ip)
 {
 	hlock();
 	if (ip->i_flag & IN_HASHED) {

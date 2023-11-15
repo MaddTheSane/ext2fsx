@@ -69,7 +69,7 @@ typedef struct ext2_valloc_args {
 #define IS_EVALLOC_ARGS(ino64) (((ino64_t)(ino64) & 0xffffffff00000000LL) == 0x5000000000000000LL ? 1 : 0)
 #define EVALLOC_ARGS(ino64) (evalloc_args_t*)((uintptr_t)((ino64) & 0x00000000ffffffffULL))
 
-__private_extern__ struct vfsops ext2fs_vfsops;
+extern struct vfsops ext2fs_vfsops __attribute__((visibility("hidden")));
 static __inline__
 int EXT2_VGET(mount_t mp, evalloc_args_t *eap, vnode_t *vpp, vfs_context_t cp)
 {

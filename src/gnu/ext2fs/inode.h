@@ -403,7 +403,7 @@ int inosleep_nolck(struct inode *ip, void *chan, const char *wmsg, struct timesp
 } while(0)
 
 #ifdef DIAGNOSTIC
-__private_extern__ u_int32_t lookwait;
+extern u_int32_t lookwait __attribute__((visibility("hidden")));
 #define lookw() OSIncrementAtomic((SInt32*)&lookwait)
 #else
 #define lookw()

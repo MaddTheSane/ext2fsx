@@ -49,7 +49,7 @@ enum {
     kNoteArgInfo = 2
 };
 
-__private_extern__ NSDictionary *transportNameTypeMap;
+extern NSDictionary *transportNameTypeMap;
 
 static
 #ifndef EFSM_1030_SUPPORT

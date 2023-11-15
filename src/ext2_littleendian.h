@@ -44,6 +44,18 @@ static __inline__ void __arch_swap_32 (u_int32_t from, volatile u_int32_t *to)
 					: "r" (from));
 }
 
+#else
+
+static __inline__ void __arch_swap_16 (u_int16_t from, volatile u_int16_t *to)
+{
+	*to = __builtin_bswap16(from);
+}
+
+static __inline__ void __arch_swap_32 (u_int32_t from, volatile u_int32_t *to)
+{
+	*to = __builtin_bswap32(from);
+}
+
 #endif // __i386__
 
 #define be16_to_cpu(x) e2_swap16((x))

@@ -60,14 +60,7 @@ static const char whatid[] __attribute__ ((unused)) =
  * the inode and the logical block number in a file.
  */
 int
-ext2_balloc2(ip, bn, size, cred, bpp, flags, blk_alloc)
-	struct inode *ip;
-	ext2_daddr_t bn;
-	int size;
-	struct ucred *cred;
-	buf_t  *bpp;
-	int flags;
-    int *blk_alloc;
+ext2_balloc2(struct inode *ip, ext2_daddr_t bn, int size, struct ucred *cred, buf_t *bpp, int flags, int *blk_alloc)
 {
 	struct ext2_sb_info *fs;
 	ext2_daddr_t nb;

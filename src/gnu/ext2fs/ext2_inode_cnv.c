@@ -74,8 +74,7 @@ static const char whatid[] __attribute__ ((unused)) =
 #include "ext2_byteorder.h"
 
 void
-ext2_print_inode( in )
-	struct inode *in;
+ext2_print_inode( struct inode *in )
 {
 	int i;
 
@@ -101,9 +100,7 @@ ext2_print_inode( in )
  *	raw ext2 inode to inode
  */
 void
-ext2_ei2i(ei, ip)
-	struct ext2_inode *ei;
-	struct inode *ip;
+ext2_ei2i(struct ext2_inode *ei, struct inode *ip)
 {
         int i;
 
@@ -164,9 +161,7 @@ ext2_ei2i(ei, ip)
  *	inode to raw ext2 inode
  */
 void
-ext2_i2ei(ip, ei)
-	struct inode *ip;
-	struct ext2_inode *ei;
+ext2_i2ei(struct inode *ip, struct ext2_inode *ei)
 {
 	int i;
 

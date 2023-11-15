@@ -28,6 +28,7 @@
 
 #define EXT2FS_NAME "ext2"
 #define EXT3FS_NAME "ext3"
+#define EXT4FS_NAME "ext4"
 
 #define EXT2_VOL_LABEL_LENGTH 16
 #define EXT2_VOL_LABEL_INVAL_CHARS "\"*/:;<=>?[\\]|"
@@ -58,6 +59,8 @@ struct ext2_args {
 #define E2_BAD_ADDRESS (void*)0xdeadbeef
 #elif defined(__i386__) || defined(__x86_64__)
 #define E2_BAD_ADDRESS (void*)0xfeedface
+#elif defined(__arm64__)
+#define E2_BAD_ADDRESS (void*)0xdeadbeef
 #else
 #error unknown architecture
 #endif
@@ -104,7 +107,7 @@ extern int spec_ioctl(struct vnop_ioctl_args*); // EVOP_DEVBLOCKSIZE
 
 /* Ext2 types */
 
-__private_extern__ lck_grp_t *ext2_lck_grp;
+extern lck_grp_t *ext2_lck_grp __attribute__((visibility("hidden")));
 #define EXT2_LCK_GRP ext2_lck_grp
 
 #define M_EXT3DIRPRV M_TEMP
@@ -118,16 +121,16 @@ typedef int     vnop_t (void *);
 #define uprintf printf
 
 #ifdef _VNODE_H_
-__private_extern__ int ext2_read(struct vnop_read_args*);
-__private_extern__ int ext2_write(struct vnop_write_args*);
-__private_extern__ int ext2_cache_lookup (struct vnop_lookup_args *);
-__private_extern__ int ext2_blktooff (struct vnop_blktooff_args *);
-__private_extern__ int ext2_offtoblk (struct vnop_offtoblk_args *);
-__private_extern__ int ext2_pagein (struct vnop_pagein_args *);
-__private_extern__ int ext2_pageout (struct vnop_pageout_args *);
-__private_extern__ int ext2_mmap (struct vnop_mmap_args *);
-__private_extern__ int ext2_ioctl (struct vnop_ioctl_args *);
-__private_extern__ int ext2_blockmap (struct vnop_blockmap_args *);
+extern int ext2_read(struct vnop_read_args*) __attribute__((visibility("hidden")));
+extern int ext2_write(struct vnop_write_args*) __attribute__((visibility("hidden")));
+extern int ext2_cache_lookup (struct vnop_lookup_args *) __attribute__((visibility("hidden")));
+extern int ext2_blktooff (struct vnop_blktooff_args *) __attribute__((visibility("hidden")));
+extern int ext2_offtoblk (struct vnop_offtoblk_args *) __attribute__((visibility("hidden")));
+extern int ext2_pagein (struct vnop_pagein_args *) __attribute__((visibility("hidden")));
+extern int ext2_pageout (struct vnop_pageout_args *) __attribute__((visibility("hidden")));
+extern int ext2_mmap (struct vnop_mmap_args *) __attribute__((visibility("hidden")));
+extern int ext2_ioctl (struct vnop_ioctl_args *) __attribute__((visibility("hidden")));
+extern int ext2_blockmap (struct vnop_blockmap_args *) __attribute__((visibility("hidden")));
 
 static __inline__
 int EXT2_READ(vnode_t vp, uio_t uio, int flags, vfs_context_t context)
@@ -154,7 +157,7 @@ int EXT2_WRITE(vnode_t vp, uio_t uio, int flags, vfs_context_t context)
 #endif
 
 #if DIAGNOSTIC
-__private_extern__ void ext2_checkdir_locked(struct vnode *dvp);
+extern void ext2_checkdir_locked(struct vnode *dvp) __attribute__((visibility("hidden")));
 #else
 #define ext2_checkdir_locked(dvp)
 #endif
@@ -219,7 +222,7 @@ int EVOP_DEVBLOCKSIZE(vnode_t vp, u_int32_t *size, vfs_context_t ctx) {
  *
  * Must call while holding kernel funnel for SMP safeness.
  */
-__private_extern__ int e2securelevel();
+extern int e2securelevel() __attribute__((visibility("hidden")));
 #define securelevel_gt(cr,level) ( e2securelevel > (level) ? EPERM : 0 )
 #define securelevel_ge(cr,level) ( e2securelevel >= (level) ? EPERM : 0 )
 
@@ -271,7 +274,6 @@ int vop_stdfsync(struct vnop_fsync_args *ap)
 
 /* Soft Updates */
 #define SF_SNAPSHOT 0
-#define SF_NOUNLINK 0
 /* No delete */
 #define NOUNLINK 0
 
@@ -353,7 +355,7 @@ static __inline void * memscan(void * addr, int c, size_t size)
 #define KERN_CRIT "CRITICAL"
 
 /* Missing clib functions (as of 10.4.x) */
-__private_extern__ char* e_strrchr(const char *, int);
+extern char* e_strrchr(const char *, int) __attribute__((visibility("hidden")));
 
 /* Debug */
 

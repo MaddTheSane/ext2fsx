@@ -146,6 +146,11 @@ withObject:args waitUntilDone:NO]; \
 #ifndef trap
 #define trap() asm volatile("int $3")
 #endif
+#elif defined(__arm64__)
+#define E2_BAD_ADDR 0xbaadf00d
+#ifndef trap
+#define trap() asm volatile("brk #0")
+#endif
 #endif
 
 #ifndef E2DiagLog

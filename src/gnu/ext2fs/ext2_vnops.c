@@ -115,7 +115,7 @@ static int ext2_chmod(vnode_t, int, kauth_cred_t, proc_t);
 static int ext2_chown(struct inode *ip, uid_t, gid_t, kauth_cred_t, proc_t);
 static int ext2_close(struct vnop_close_args *);
 static int ext2_create(struct vnop_create_args *);
-__private_extern__ int ext2_fsync(struct vnop_fsync_args *);
+extern int ext2_fsync(struct vnop_fsync_args *) __attribute__((visibility("hidden")));
 static int ext2_getattr(struct vnop_getattr_args *);
 #ifdef EXT_KNOTE
 static int ext2_kqfilter(struct vnop_kqfilter_args *ap);
@@ -125,7 +125,7 @@ static int ext2_mkdir(struct vnop_mkdir_args *);
 static int ext2_mknod(struct vnop_mknod_args *);
 static int ext2_open(struct vnop_open_args *);
 static int ext2_pathconf(struct vnop_pathconf_args *);
-__private_extern__ int ext2_read(struct vnop_read_args *);
+extern int ext2_read(struct vnop_read_args *) __attribute__((visibility("hidden")));
 static int ext2_readlink(struct vnop_readlink_args *);
 static int ext2_remove(struct vnop_remove_args *);
 static int ext2_rename(struct vnop_rename_args *);
@@ -133,7 +133,7 @@ static int ext2_rmdir(struct vnop_rmdir_args *);
 static int ext2_setattr(struct vnop_setattr_args *);
 static int ext2_strategy(struct vnop_strategy_args *);
 static int ext2_symlink(struct vnop_symlink_args *);
-__private_extern__ int ext2_write(struct vnop_write_args *);
+extern int ext2_write(struct vnop_write_args *) __attribute__((visibility("hidden")));
 static int ext2fifo_close(struct vnop_close_args *);
 #ifdef EXT_KNOTE
 static int ext2fifo_kqfilter(struct vnop_kqfilter_args *);
@@ -217,7 +217,8 @@ static struct vnodeopv_entry_desc ext2_vnodeop_entries[] = {
     { &vnop_searchfs_desc,	(vnop_t *) ext2_searchfs },
     { NULL, NULL }
 };
-__private_extern__ struct vnodeopv_desc ext2fs_vnodeop_opv_desc =
+extern struct vnodeopv_desc ext2fs_vnodeop_opv_desc __attribute__((visibility("hidden")));
+struct vnodeopv_desc ext2fs_vnodeop_opv_desc =
 	{ &ext2_vnodeop_p, ext2_vnodeop_entries };
 
 // Exported by BSD KPI, but not in headers
@@ -305,7 +306,8 @@ static struct vnodeopv_entry_desc ext2_specop_entries[] = {
     { &vnop_ioctl_desc, (vnop_t *)spec_ioctl },
     { NULL, NULL }
 };
-__private_extern__ struct vnodeopv_desc ext2fs_specop_opv_desc =
+extern struct vnodeopv_desc ext2fs_specop_opv_desc __attribute__((visibility("hidden")));
+struct vnodeopv_desc ext2fs_specop_opv_desc =
 	{ &ext2_specop_p, ext2_specop_entries };
 
 vnop_t **ext2_fifoop_p;
@@ -350,7 +352,8 @@ static struct vnodeopv_entry_desc ext2_fifoop_entries[] = {
     { &vnop_ioctl_desc, (vnop_t *)fifo_ioctl },
     { NULL, NULL }
 };
-__private_extern__ struct vnodeopv_desc ext2fs_fifoop_opv_desc =
+extern struct vnodeopv_desc ext2fs_fifoop_opv_desc __attribute__((visibility("hidden")));
+struct vnodeopv_desc ext2fs_fifoop_opv_desc =
 	{ &ext2_fifoop_p, ext2_fifoop_entries };
 
 #include <gnu/ext2fs/ext2_readwrite.c>
@@ -390,8 +393,7 @@ static const struct dirtemplate omastertemplate = {
 #undef DIRBLKSIZ
 
 void
-ext2_itimes(vp)
-	vnode_t vp;
+ext2_itimes(vnode_t vp)
 {
 	struct inode *ip;
 	struct timespec ts;
@@ -434,13 +436,12 @@ ext2_itimes(vp)
  * Create a regular file
  */
 static int
-ext2_create(ap)
-	struct vnop_create_args /* {
-		vnode_t a_dvp;
-		vnode_t *a_vpp;
-		struct componentname *a_cnp;
-		struct vattr *a_vap;
-	} */ *ap;
+ext2_create(struct vnop_create_args /* {
+									 vnode_t a_dvp;
+				vnode_t *a_vpp;
+				struct componentname *a_cnp;
+				struct vattr *a_vap;
+			} */ *ap)
 {
 	int error;
    
@@ -461,13 +462,12 @@ ext2_create(ap)
  * Nothing to do.
  */
 static int
-ext2_open(ap)
-	struct vnop_open_args /* {
-		vnode_t a_vp;
-		int  a_mode;
-		ucred_ta_cred;
-		proc_ta_td;
-	} */ *ap;
+ext2_open(struct vnop_open_args /* {
+								 vnode_t a_vp;
+			   int  a_mode;
+			   ucred_ta_cred;
+			   proc_ta_td;
+		   } */ *ap)
 {
 
 	ext2_trace_enter();
@@ -490,13 +490,12 @@ ext2_open(ap)
  * Update the times on the inode.
  */
 static int
-ext2_close(ap)
-	struct vnop_close_args /* {
-		vnode_t a_vp;
-		int  a_fflag;
-		ucred_ta_cred;
-		proc_ta_td;
-	} */ *ap;
+ext2_close(struct vnop_close_args /* {
+								   vnode_t a_vp;
+				 int  a_fflag;
+				 ucred_ta_cred;
+				 proc_ta_td;
+			 } */ *ap)
 {
    vnode_t vp = ap->a_vp;
    
@@ -510,13 +509,12 @@ ext2_close(ap)
 }
 
 static int
-ext2_getattr(ap)
-	struct vnop_getattr_args /* {
-		vnode_t a_vp;
-		struct vattr *a_vap;
-		ucred_ta_cred;
-		proc_ta_td;
-	} */ *ap;
+ext2_getattr(struct vnop_getattr_args /* {
+									   vnode_t a_vp;
+				  struct vattr *a_vap;
+				  ucred_ta_cred;
+				  proc_ta_td;
+			  } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
@@ -579,13 +577,12 @@ ext2_getattr(ap)
  * Set attribute vnode op. called from several syscalls
  */
 static int
-ext2_setattr(ap)
-	struct vnop_setattr_args /* {
-		vnode_t a_vp;
-		struct vattr *a_vap;
-		ucred_ta_cred;
-		proc_ta_td;
-	} */ *ap;
+ext2_setattr(struct vnop_setattr_args /* {
+									   vnode_t a_vp;
+				  struct vattr *a_vap;
+				  ucred_ta_cred;
+				  proc_ta_td;
+			  } */ *ap)
 {
 	struct vnode_attr *vap = ap->a_vap;
 	vnode_t vp = ap->a_vp;
@@ -687,11 +684,7 @@ setattr_exit_with_lock:
  * Inode must be locked before calling.
  */
 static int
-ext2_chmod(vp, mode, cred, p)
-	vnode_t vp;
-	int mode;
-	kauth_cred_t cred;
-	proc_t p;
+ext2_chmod(vnode_t vp, int mode, kauth_cred_t cred, proc_t p)
 {
 	struct inode *ip = VTOI(vp);
 	int super;
@@ -714,12 +707,7 @@ ext2_chmod(vp, mode, cred, p)
  * Perform chown operation on inode ip
  */
 static int
-ext2_chown(ip, uid, gid, cred, p)
-	struct inode *ip;
-	uid_t uid;
-	gid_t gid;
-	kauth_cred_t cred;
-	proc_t p;
+ext2_chown(struct inode *ip, uid_t uid, gid_t gid, kauth_cred_t cred, proc_t p)
 {
 	uid_t ouid;
 	gid_t ogid;
@@ -752,12 +740,11 @@ ext2_chown(ip, uid, gid, cred, p)
  */
 /* ARGSUSED */
 __private_extern__ int
-ext2_fsync(ap)
-	struct vnop_fsync_args /* {
-		vnode_t a_vp;
-		int a_waitfor;
-        vfs_context_t a_context;
-	} */ *ap;
+ext2_fsync(struct vnop_fsync_args /* {
+								   vnode_t a_vp;
+				 int a_waitfor;
+				 vfs_context_t a_context;
+			 } */ *ap)
 {
     ext2_trace_enter();
    
@@ -784,13 +771,12 @@ ext2_fsync(ap)
  */
 /* ARGSUSED */
 static int
-ext2_mknod(ap)
-	struct vnop_mknod_args /* {
-		vnode_t a_dvp;
-		vnode_t *a_vpp;
-		struct componentname *a_cnp;
-		struct vattr *a_vap;
-	} */ *ap;
+ext2_mknod(struct vnop_mknod_args /* {
+								   vnode_t a_dvp;
+				 vnode_t *a_vpp;
+				 struct componentname *a_cnp;
+				 struct vattr *a_vap;
+			 } */ *ap)
 {
 	struct vnode_attr *vap = ap->a_vap;
 	vnode_t *vpp = ap->a_vpp;
@@ -843,14 +829,13 @@ ext2_mknod(ap)
 }
 
 static int
-ext2_remove(ap)
-	struct vnop_remove_args /* {
-		struct vnode *a_dvp;
-		struct vnode *a_vp;
-		struct componentname *a_cnp;
-		int a_flags;
-		vfs_context_t a_context;
-	} */ *ap;
+ext2_remove(struct vnop_remove_args /* {
+									 struct vnode *a_dvp;
+				struct vnode *a_vp;
+				struct componentname *a_cnp;
+				int a_flags;
+				vfs_context_t a_context;
+			} */ *ap)
 {
 	struct inode *ip, *dip;
 	vnode_t vp = ap->a_vp;
@@ -904,12 +889,11 @@ remove_out:
  * link vnode call
  */
 static int
-ext2_link(ap)
-	struct vnop_link_args /* {
-		vnode_t a_tdvp;
-		vnode_t a_vp;
-		struct componentname *a_cnp;
-	} */ *ap;
+ext2_link(struct vnop_link_args /* {
+								 vnode_t a_tdvp;
+			   vnode_t a_vp;
+			   struct componentname *a_cnp;
+		   } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
 	vnode_t tdvp = ap->a_tdvp;
@@ -958,16 +942,15 @@ link_out:
  *   See comments in sys/ufs/ufs/ufs_vnops.c
  */
 static int
-ext2_rename(ap)
-	struct vnop_rename_args  /* {
-		struct vnode *a_fdvp;
-		struct vnode *a_fvp;
-		struct componentname *a_fcnp;
-		struct vnode *a_tdvp;
-		struct vnode *a_tvp;
-		struct componentname *a_tcnp;
-		vfs_context_t a_context;
-	} */ *ap;
+ext2_rename(struct vnop_rename_args  /* {
+									  struct vnode *a_fdvp;
+				 struct vnode *a_fvp;
+				 struct componentname *a_fcnp;
+				 struct vnode *a_tdvp;
+				 struct vnode *a_tvp;
+				 struct componentname *a_tcnp;
+				 vfs_context_t a_context;
+			 } */ *ap)
 {
 	vnode_t tvp = ap->a_tvp;
 	vnode_t tdvp = ap->a_tdvp;
@@ -1319,13 +1302,12 @@ abortit:
  * Mkdir system call
  */
 static int
-ext2_mkdir(ap)
-	struct vnop_mkdir_args /* {
-		vnode_t a_dvp;
-		vnode_t *a_vpp;
-		struct componentname *a_cnp;
-		struct vattr *a_vap;
-	} */ *ap;
+ext2_mkdir(struct vnop_mkdir_args /* {
+								   vnode_t a_dvp;
+				 vnode_t *a_vpp;
+				 struct componentname *a_cnp;
+				 struct vattr *a_vap;
+			 } */ *ap)
 {
 	vnode_t dvp = ap->a_dvp;
 	struct vnode_attr *vap = ap->a_vap;
@@ -1487,12 +1469,11 @@ out:
  * Rmdir system call.
  */
 static int
-ext2_rmdir(ap)
-	struct vnop_rmdir_args /* {
-		vnode_t a_dvp;
-		vnode_t a_vp;
-		struct componentname *a_cnp;
-	} */ *ap;
+ext2_rmdir(struct vnop_rmdir_args /* {
+								   vnode_t a_dvp;
+				 vnode_t a_vp;
+				 struct componentname *a_cnp;
+			 } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
 	vnode_t dvp = ap->a_dvp;
@@ -1594,14 +1575,13 @@ out:
  * symlink -- make a symbolic link
  */
 static int
-ext2_symlink(ap)
-	struct vnop_symlink_args /* {
-		vnode_t a_dvp;
-		vnode_t *a_vpp;
-		struct componentname *a_cnp;
-		struct vattr *a_vap;
-		char *a_target;
-	} */ *ap;
+ext2_symlink(struct vnop_symlink_args /* {
+									   vnode_t a_dvp;
+				  vnode_t *a_vpp;
+				  struct componentname *a_cnp;
+				  struct vattr *a_vap;
+				  char *a_target;
+			  } */ *ap)
 {
 	vnode_t vp;
     vnode_t *vpp = ap->a_vpp;
@@ -1635,12 +1615,11 @@ ext2_symlink(ap)
  * Return target name of a symbolic link
  */
 static int
-ext2_readlink(ap)
-	struct vnop_readlink_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		ucred_ta_cred;
-	} */ *ap;
+ext2_readlink(struct vnop_readlink_args /* {
+										 vnode_t a_vp;
+				 struct uio *a_uio;
+				 ucred_ta_cred;
+			 } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
@@ -1667,10 +1646,9 @@ ext2_readlink(ap)
  * deadlock on memory.  See ext2_bmap() for details.
  */
 static int
-ext2_strategy(ap)
-	struct vnop_strategy_args /* {
-		buf_t  a_bp;
-	} */ *ap;
+ext2_strategy(struct vnop_strategy_args /* {
+										 buf_t  a_bp;
+			 } */ *ap)
 {
 	struct inode *ip = VTOI(buf_vnode(ap->a_bp));
     return (buf_strategy(ip->i_devvp, ap));
@@ -1700,13 +1678,12 @@ ext2_print(ap)
  * Read wrapper for special devices.
  */
 static int
-ext2spec_read(ap)
-	struct vnop_read_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		int  a_ioflag;
-		ucred_ta_cred;
-	} */ *ap;
+ext2spec_read(struct vnop_read_args /* {
+									 vnode_t a_vp;
+				struct uio *a_uio;
+				int  a_ioflag;
+				ucred_ta_cred;
+			} */ *ap)
 {
 	int error, resid;
 	struct inode *ip;
@@ -1734,13 +1711,12 @@ ext2spec_read(ap)
  * Write wrapper for special devices.
  */
 static int
-ext2spec_write(ap)
-	struct vnop_write_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		int  a_ioflag;
-		ucred_ta_cred;
-	} */ *ap;
+ext2spec_write(struct vnop_write_args /* {
+									   vnode_t a_vp;
+				  struct uio *a_uio;
+				  int  a_ioflag;
+				  ucred_ta_cred;
+			  } */ *ap)
 {
 	int error, resid;
 	struct inode *ip;
@@ -1766,13 +1742,12 @@ ext2spec_write(ap)
  * Update the times on the inode then do device close.
  */
 static int
-ext2spec_close(ap)
-	struct vnop_close_args /* {
-		vnode_t a_vp;
-		int  a_fflag;
-		ucred_ta_cred;
-		proc_ta_td;
-	} */ *ap;
+ext2spec_close(struct vnop_close_args /* {
+									   vnode_t a_vp;
+				  int  a_fflag;
+				  ucred_ta_cred;
+				  proc_ta_td;
+			  } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
    
@@ -1787,13 +1762,12 @@ ext2spec_close(ap)
  * Read wrapper for fifos.
  */
 static int
-ext2fifo_read(ap)
-	struct vnop_read_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		int  a_ioflag;
-		ucred_ta_cred;
-	} */ *ap;
+ext2fifo_read(struct vnop_read_args /* {
+									 vnode_t a_vp;
+				struct uio *a_uio;
+				int  a_ioflag;
+				ucred_ta_cred;
+			} */ *ap)
 {
 	int error, resid;
     vnode_t vp;
@@ -1820,13 +1794,12 @@ ext2fifo_read(ap)
  * Write wrapper for fifos.
  */
 static int
-ext2fifo_write(ap)
-	struct vnop_write_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		int  a_ioflag;
-		ucred_ta_cred;
-	} */ *ap;
+ext2fifo_write(struct vnop_write_args /* {
+									   vnode_t a_vp;
+				  struct uio *a_uio;
+				  int  a_ioflag;
+				  ucred_ta_cred;
+			  } */ *ap)
 {
 	int error, resid;
 	struct inode *ip;
@@ -1852,13 +1825,12 @@ ext2fifo_write(ap)
  * Update the times on the inode then do device close.
  */
 static int
-ext2fifo_close(ap)
-	struct vnop_close_args /* {
-		vnode_t a_vp;
-		int  a_fflag;
-		ucred_ta_cred;
-		proc_ta_td;
-	} */ *ap;
+ext2fifo_close(struct vnop_close_args /* {
+									   vnode_t a_vp;
+				  int  a_fflag;
+				  ucred_ta_cred;
+				  proc_ta_td;
+			  } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
    
@@ -1894,12 +1866,11 @@ ext2fifo_kqfilter(ap)
  * Return POSIX pathconf information applicable to ext2 filesystems.
  */
 static int
-ext2_pathconf(ap)
-	struct vnop_pathconf_args /* {
-		vnode_t a_vp;
-		int a_name;
-		int *a_retval;
-	} */ *ap;
+ext2_pathconf(struct vnop_pathconf_args /* {
+										 vnode_t a_vp;
+				 int a_name;
+				 int *a_retval;
+			 } */ *ap)
 {
 
 	switch (ap->a_name) {
@@ -1935,14 +1906,13 @@ ext2_pathconf(ap)
  * Advisory record locking support
  */
 static int
-ext2_advlock(ap)
-	struct vnop_advlock_args /* {
-		vnode_t a_vp;
-		caddr_t  a_id;
-		int  a_op;
-		struct flock *a_fl;
-		int  a_flags;
-	} */ *ap;
+ext2_advlock(struct vnop_advlock_args /* {
+									   vnode_t a_vp;
+				  caddr_t  a_id;
+				  int  a_op;
+				  struct flock *a_fl;
+				  int  a_flags;
+			  } */ *ap)
 {
    /* Cribbed straigt from ufs */
    register struct inode *ip = VTOI(ap->a_vp);
@@ -2038,10 +2008,7 @@ ext2_mnomap(struct vnop_mnomap_args *ap)
  * vnodes. Returns vnode/inode referenced and locked.
  */
 int
-ext2_vinit(mntp, args, vpp)
-	mount_t  mntp;
-    evinit_args_t *args;
-	vnode_t *vpp;
+ext2_vinit(mount_t mntp, evinit_args_t *args, vnode_t *vpp)
 {
 	struct vnode_fsparam vfsargs;
     struct inode *ip = args->vi_ip;
@@ -2115,12 +2082,7 @@ ext2_vinit(mntp, args, vpp)
  * Allocate a new inode.
  */
 static int
-ext2_makeinode(mode, dvp, vpp, cnp, context)
-	int mode;
-	vnode_t dvp;
-	vnode_t *vpp;
-	struct componentname *cnp;
-    vfs_context_t context;
+ext2_makeinode(int mode, vnode_t dvp, vnode_t *vpp, struct componentname *cnp, vfs_context_t context)
 {
 	struct inode *ip, *pdir;
 	vnode_t tvp;
@@ -2232,11 +2194,10 @@ static struct filterops ext2vnode_filtops =
 	{ 1, NULL, filt_ext2detach, filt_ext2vnode };
 
 static int
-ext2_kqfilter(ap)
-	struct vnop_kqfilter_args /* {
-		vnode_t a_vp;
-		struct knote *a_kn;
-	} */ *ap;
+ext2_kqfilter(struct vnop_kqfilter_args /* {
+										 vnode_t a_vp;
+				 struct knote *a_kn;
+			 } */ *ap)
 {
 	vnode_t vp = ap->a_vp;
 	struct knote *kn = ap->a_kn;

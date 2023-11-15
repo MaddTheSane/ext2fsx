@@ -46,11 +46,11 @@ static const char whatid[] __attribute__ ((unused)) =
 #include <gnu/ext2fs/ext2_extern.h>
 
 // missing clib functions (as of 10.4.x)
-__private_extern__ char*
+char*
 e_strrchr(const char *s, int c)
 {
    char *name;
-   int i;
+   ssize_t i;
    
    name = NULL;
    i = strlen(s);
@@ -64,7 +64,6 @@ e_strrchr(const char *s, int c)
 }
 
 
-__private_extern__
 int e2securelevel()
 {
 #ifdef notyet
@@ -79,15 +78,14 @@ int e2securelevel()
 
 /* VNode Ops */
 
-__private_extern__ int
-ext2_ioctl(ap)
-	struct vnop_ioctl_args /* {
-      vnode_t a_vp;
-      u_long a_command;
-      caddr_t a_data;
-      int a_fflag;
-      vfs_context_t a_context;
-   } */ *ap;
+int
+ext2_ioctl(struct vnop_ioctl_args /* {
+								   vnode_t a_vp;
+		   u_long a_command;
+		   caddr_t a_data;
+		   int a_fflag;
+		   vfs_context_t a_context;
+		} */ *ap)
 {
    struct inode *ip = VTOI(ap->a_vp);
    struct ext2_sb_info *fs;
@@ -195,9 +193,8 @@ ext2_ioctl(ap)
 }
 
 #if DIAGNOSTIC
-__private_extern__ void
-ext2_checkdir_locked(dvp)
-   vnode_t dvp;
+void
+ext2_checkdir_locked(vnode_t dvp)
 {
    buf_t  bp;
    struct ext2_dir_entry_2 *ep;

@@ -112,7 +112,8 @@ static const char *e_fsNames[] = {
    nil
 };
 
-__private_extern__ NSDictionary *transportNameTypeMap = nil;
+extern NSDictionary *transportNameTypeMap __attribute__((visibility("hidden")));
+NSDictionary *transportNameTypeMap = nil;
 
 static void iomatch_add_callback(void *refcon, io_iterator_t iter);
 static void iomatch_rem_callback(void *refcon, io_iterator_t iter);

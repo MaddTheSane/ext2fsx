@@ -80,7 +80,7 @@ static const char whatid[] __attribute__ ((unused)) =
 #include <sys/kauth.h>
 
 #include <string.h>
-#include <machine/spl.h>
+//#include <machine/spl.h>
 
 // Exported by BSD KPI, but not in headers
 extern int spec_fsync(struct vnop_fsync_args*); // fsync
@@ -139,7 +139,7 @@ struct ext2_iter_cargs {
 	int ca_err;
 };
 
-__private_extern__ struct vfsops ext2fs_vfsops = {
+struct vfsops ext2fs_vfsops = {
 	ext2_mount,
 	vfs_stdstart,
 	ext2_unmount,
@@ -266,11 +266,7 @@ ext2_mountroot()
  * mount system call
  */
 static int
-ext2_mount(mp, devvp, data, context)
-	mount_t mp;
-	vnode_t devvp;
-    user_addr_t data;
-	vfs_context_t context;
+ext2_mount(mount_t mp, vnode_t devvp, user_addr_t data, vfs_context_t context)
 {
 	struct ext2mount *ump = 0;
 	struct ext2_sb_info *fs;
@@ -455,10 +451,7 @@ static int ext2_check_descriptors (struct ext2_sb_info * sb)
 }
 
 static int
-ext2_check_sb_compat(es, dev, ronly)
-	struct ext2_super_block *es;
-	dev_t dev;
-	int ronly;
+ext2_check_sb_compat(struct ext2_super_block *es, dev_t dev, int ronly)
 {
 
 	if (le16_to_cpu(es->s_magic) != EXT2_SUPER_MAGIC) {
@@ -492,11 +485,7 @@ ext2_check_sb_compat(es, dev, ronly)
  * ext2_sb_info is kept in cpu byte order except for group info
  * which is kept in LE (on disk) order.
  */
-static int compute_sb_data(devvp, context, es, fs)
-	vnode_t devvp;
-	vfs_context_t context;
-	struct ext2_super_block * es;
-	struct ext2_sb_info * fs;
+static int compute_sb_data(vnode_t devvp, vfs_context_t context, struct ext2_super_block * es, struct ext2_sb_info * fs)
 {
     int db_count, error;
     int i, j;
@@ -660,9 +649,7 @@ ext2_reload_callback(vnode_t vp, void *cargs)
 }
 
 static int
-ext2_reload(mountp, context)
-	mount_t mountp;
-	vfs_context_t context;
+ext2_reload(mount_t mountp, vfs_context_t context)
 {
 	struct ext2_iter_cargs cargs;
 	vnode_t devvp;
@@ -721,10 +708,7 @@ ext2_reload(mountp, context)
  * Common code for mount and mountroot
  */
 static int
-ext2_mountfs(devvp, mp, context)
-	vnode_t devvp;
-	mount_t mp;
-	vfs_context_t context;
+ext2_mountfs(vnode_t devvp, mount_t mp, vfs_context_t context)
 {
 	struct timeval tv;
     struct ext2mount *ump;
@@ -918,10 +902,7 @@ out:
  * unmount system call
  */
 static int
-ext2_unmount(mp, mntflags, context)
-	mount_t mp;
-	int mntflags;
-	vfs_context_t context;
+ext2_unmount(mount_t mp, int mntflags, vfs_context_t context)
 {
 	struct ext2mount *ump;
 	struct ext2_sb_info *fs;
@@ -975,10 +956,7 @@ ext2_unmount(mp, mntflags, context)
  * Flush out all the files in a filesystem.
  */
 static int
-ext2_flushfiles(mp, flags, context)
-	mount_t mp;
-	int flags;
-	vfs_context_t context;
+ext2_flushfiles(mount_t mp, int flags, vfs_context_t context)
 {
 	int error;
 	
@@ -992,10 +970,7 @@ ext2_flushfiles(mp, flags, context)
  * taken from ext2/super.c ext2_statfs
  */
 static int
-ext2_getattrfs(mp, attrs, context)
-	mount_t mp;
-	struct vfs_attr *attrs;
-	vfs_context_t context;
+ext2_getattrfs(mount_t mp, struct vfs_attr *attrs, vfs_context_t context)
 {
 	unsigned long overhead;
 	struct ext2mount *ump;
@@ -1230,10 +1205,7 @@ ext2_sync_callback(vnode_t vp, void *cargs)
 }
 
 static int
-ext2_sync(mp, waitfor, context)
-	mount_t mp;
-	int waitfor;
-	vfs_context_t context;
+ext2_sync(mount_t mp, int waitfor, vfs_context_t context)
 {
 	struct ext2_iter_cargs args;
 	struct ext2mount *ump = VFSTOEXT2(mp);
@@ -1329,11 +1301,7 @@ void ext2_vget_irelse (struct inode *ip)
  * done by the calling routine.
  */
 static int
-ext2_vget(mp, ino, vpp, context)
-	mount_t mp;
-    ino64_t ino;
-	vnode_t *vpp;
-	vfs_context_t context;
+ext2_vget(mount_t mp, ino64_t ino, vnode_t *vpp, vfs_context_t context)
 {
 	evinit_args_t viargs;
 	struct ext2_sb_info *fs;
@@ -1499,12 +1467,7 @@ printf("ext2_vget(%d) dbn= %d ", ino, fsbtodb(fs, ino_to_fsba(fs, ino)));
  *   those rights via. exflagsp and credanonp
  */
 static int
-ext2_fhtovp(mp, fhlen, fhp, vpp, context)
-	mount_t mp;
-	int fhlen;
-	unsigned char *fhp;
-	vnode_t *vpp;
-	vfs_context_t context;
+ext2_fhtovp(mount_t mp, int fhlen, unsigned char *fhp, vnode_t *vpp, vfs_context_t context)
 {
 	struct inode *ip;
 	struct ufid *ufhp;
@@ -1539,11 +1502,7 @@ ext2_fhtovp(mp, fhlen, fhp, vpp, context)
  */
 /* ARGSUSED */
 static int
-ext2_vptofh(vp, fhlen, fhp, context)
-	vnode_t vp;
-	int *fhlen;
-	unsigned char *fhp;
-	vfs_context_t context;
+ext2_vptofh(vnode_t vp, int *fhlen, unsigned char *fhp, vfs_context_t context)
 {
 	struct inode *ip;
 	struct ufid *ufhp;
@@ -1560,10 +1519,7 @@ ext2_vptofh(vp, fhlen, fhp, context)
  * Write a superblock and associated information back to disk.
  */
 static int
-ext2_sbupdate(context, mp, waitfor)
-	vfs_context_t context;
-	struct ext2mount *mp;
-	int waitfor;
+ext2_sbupdate(vfs_context_t context, struct ext2mount *mp, int waitfor)
 {
 	struct ext2_sb_info *fs = mp->um_e2fs;
 	struct ext2_super_block *es = fs->s_es;
@@ -1648,10 +1604,7 @@ printf("\nupdating superblock, waitfor=%s\n", waitfor == MNT_WAIT ? "yes":"no");
  * Return the root of a filesystem.
  */
 static int
-ext2_root(mp, vpp, context)
-	mount_t mp;
-	vnode_t *vpp;
-	vfs_context_t context;
+ext2_root(mount_t mp, vnode_t *vpp, vfs_context_t context)
 {
 	vnode_t nvp;
 	struct inode *ip;
@@ -1692,10 +1645,7 @@ ext2_uninit(struct vfsconf *vfsp)
  */
 /* ARGSUSED */
 static int
-vfs_stdstart(mp, flags, context)
-	mount_t mp;
-	int flags;
-	vfs_context_t context;
+vfs_stdstart(mount_t mp, int flags, vfs_context_t context)
 {
 	return (0);
 }
@@ -1705,18 +1655,13 @@ vfs_stdstart(mp, flags, context)
  */
 /* ARGSUSED */
 static int
-ext2_quotactl(mp, cmd, uid, arg, context)
-	mount_t mp;
-	int cmd;
-	uid_t uid;
-	caddr_t arg;
-	vfs_context_t context;
+ext2_quotactl(mount_t mp, int cmd, uid_t uid, caddr_t arg, vfs_context_t context)
 {
 	return (EOPNOTSUPP);
 }
 
-__private_extern__ int dirchk;
-__private_extern__ u_int32_t lookcacheinval;
+extern int dirchk;
+extern u_int32_t lookcacheinval;
 
 static int
 ext2_sysctl(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp, user_addr_t newp,
@@ -1816,9 +1761,9 @@ ext2_sysctl(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp, user_ad
 
 /* Kernel entry/exit points */
 
-__private_extern__ struct vnodeopv_desc ext2fs_vnodeop_opv_desc;
-__private_extern__ struct vnodeopv_desc ext2fs_specop_opv_desc;
-__private_extern__ struct vnodeopv_desc ext2fs_fifoop_opv_desc;
+extern struct vnodeopv_desc ext2fs_vnodeop_opv_desc;
+extern struct vnodeopv_desc ext2fs_specop_opv_desc;
+extern struct vnodeopv_desc ext2fs_fifoop_opv_desc;
 
 extern struct sysctl_oid sysctl__vfs_e2fs;
 extern struct sysctl_oid sysctl__vfs_e2fs_dircheck;

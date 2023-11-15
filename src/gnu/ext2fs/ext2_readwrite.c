@@ -72,14 +72,13 @@ static const char whatid[] __attribute__ ((unused)) =
  * Vnode op for reading.
  */
 /* ARGSUSED */
-__private_extern__ int
-READ(ap)
-	struct vnop_read_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		int a_ioflag;
-		struct ucred *a_cred;
-	} */ *ap;
+int
+READ(struct vnop_read_args /* {
+							vnode_t a_vp;
+			 struct uio *a_uio;
+			 int a_ioflag;
+			 struct ucred *a_cred;
+		 } */ *ap)
 {
 	vnode_t vp;
 	struct inode *ip;
@@ -210,14 +209,13 @@ READ(ap)
 /*
  * Vnode op for writing.
  */
-__private_extern__ int
-WRITE(ap)
-	struct vnop_write_args /* {
-		vnode_t a_vp;
-		struct uio *a_uio;
-		int a_ioflag;
-		struct ucred *a_cred;
-	} */ *ap;
+int
+WRITE(struct vnop_write_args /* {
+							  vnode_t a_vp;
+			   struct uio *a_uio;
+			   int a_ioflag;
+			   struct ucred *a_cred;
+		   } */ *ap)
 {
 	vnode_t vp;
 	uio_t uio;
