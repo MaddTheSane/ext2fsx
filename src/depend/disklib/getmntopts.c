@@ -70,11 +70,7 @@
 int getmnt_silent = 1;
 
 void
-getmntopts(options, m0, flagp, altflagp)
-	const char *options;
-	const struct mntopt *m0;
-	int *flagp;
-	int *altflagp;
+getmntopts(const char *options, const struct mntopt *m0, int *flagp, int *altflagp)
 {
 	const struct mntopt *m;
 	int negative, len;
@@ -127,9 +123,7 @@ getmntopts(options, m0, flagp, altflagp)
 }
 
 void
-rmslashes(rrpin, rrpout)
-	char *rrpin;
-	char *rrpout;
+rmslashes(char *rrpin, char *rrpout)
 {
 	char *rrpoutstart;
 
@@ -149,9 +143,7 @@ rmslashes(rrpin, rrpout)
 }
 
 void
-checkpath(path, resolved)
-	const char *path;
-	char *resolved;
+checkpath(const char *path, char *resolved)
 {
 	struct stat sb;
 

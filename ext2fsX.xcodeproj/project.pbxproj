@@ -76,7 +76,7 @@
 
 /* Begin PBXBuildFile section */
 		551BADB913C158D400080BD5 /* ext2fs.util in CopyFiles */ = {isa = PBXBuildFile; fileRef = D32B209F09947656001A78A0 /* ext2fs.util */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		551BADBB13C1596300080BD5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D376F3C7040DF6C200A80164 /* InfoPlist.strings */; };
+		551BADBB13C1596300080BD5 /* InfoPlist.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = D376F3C7040DF6C200A80164 /* InfoPlist.stringsdict */; };
 		5528A0C7153F1F7C00765DA1 /* e2fsck.conf.5 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5528A0C6153F1F7100765DA1 /* e2fsck.conf.5 */; };
 		5528A0CB153F1FF600765DA1 /* mke2fs.conf.5 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5528A0CA153F1FDE00765DA1 /* mke2fs.conf.5 */; };
 		5528A0CD153F200B00765DA1 /* mke2fs.conf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5528A0C9153F1FDE00765DA1 /* mke2fs.conf */; };
@@ -384,139 +384,6 @@
 		D38228FC066A861F00AD3D37 /* efsprobe in CopyFiles */ = {isa = PBXBuildFile; fileRef = D38226D406697F7000AD3D37 /* efsprobe */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		D38A5F1F06711E5200E9E666 /* ExtFSDiskManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3660BFA0643ED20009810C9 /* ExtFSDiskManager.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXBuildRule section */
-		D32B2046099470A8001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B2047099470A8001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.3_3;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B2048099470A8001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.3_3;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B20C70994777A001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B20C80994777A001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.3_3;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B20C90994777A001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.3_3;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B20DF099477DE001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B20E0099477DE001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.3_3;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B20E1099477DE001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.3_3;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D32B210F09947829001A78A0 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D3E6C3F20911E86500E3B744 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D3E6C3F30911E88000E3B744 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		D3E6C3F60911E89400E3B744 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-/* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
 		551BADBD13C1599000080BD5 /* PBXContainerItemProxy */ = {
@@ -959,12 +826,12 @@
 		5577058E13C3CD5600457317 /* libss.1.0.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libss.1.0.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		5599F1171B12E83600A138EB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		5599F1191B12E87000A138EB /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
-		559BDDB62B04426700CC9D2E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		559BDDB72B04427300CC9D2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		559BDDB82B04427300CC9D2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		559BDDB92B04427300CC9D2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		559BDDBA2B04427600CC9D2E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		559BDDBB2B04431000CC9D2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		559BDDB62B04426700CC9D2E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = fr.lproj/InfoPlist.stringsdict; sourceTree = "<group>"; };
+		559BDDB72B04427300CC9D2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/InfoPlist.stringsdict; sourceTree = "<group>"; };
+		559BDDB82B04427300CC9D2E /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		559BDDB92B04427300CC9D2E /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		559BDDBA2B04427600CC9D2E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = de; path = de.lproj/InfoPlist.stringsdict; sourceTree = "<group>"; };
+		559BDDBB2B04431000CC9D2E /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		55E5A54C13C1A17400BF3DD3 /* libext2fs.2.1.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libext2fs.2.1.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		55E5A59B13C1A55600BF3DD3 /* libe2p.2.1.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libe2p.2.1.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		55F64093153600FA00F6E73D /* e2fsck */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = e2fsck; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4779,7 +4646,7 @@
 			isa = PBXGroup;
 			children = (
 				551BAD7E13C157B700080BD5 /* Info.plist */,
-				D376F3C7040DF6C200A80164 /* InfoPlist.strings */,
+				D376F3C7040DF6C200A80164 /* InfoPlist.stringsdict */,
 			);
 			name = "File System bundle";
 			path = fs_bndl;
@@ -5142,9 +5009,6 @@
 				D32B203E099470A7001A78A0 /* Frameworks */,
 			);
 			buildRules = (
-				D32B2046099470A8001A78A0 /* PBXBuildRule */,
-				D32B2047099470A8001A78A0 /* PBXBuildRule */,
-				D32B2048099470A8001A78A0 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -5178,9 +5042,6 @@
 				D32B20C10994777A001A78A0 /* Frameworks */,
 			);
 			buildRules = (
-				D32B20C70994777A001A78A0 /* PBXBuildRule */,
-				D32B20C80994777A001A78A0 /* PBXBuildRule */,
-				D32B20C90994777A001A78A0 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -5198,9 +5059,6 @@
 				D32B20D9099477DD001A78A0 /* Frameworks */,
 			);
 			buildRules = (
-				D32B20DF099477DE001A78A0 /* PBXBuildRule */,
-				D32B20E0099477DE001A78A0 /* PBXBuildRule */,
-				D32B20E1099477DE001A78A0 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -5220,7 +5078,6 @@
 				D32B210809947828001A78A0 /* CopyFiles */,
 			);
 			buildRules = (
-				D32B210F09947829001A78A0 /* PBXBuildRule */,
 			);
 			dependencies = (
 				D32B20F009947828001A78A0 /* PBXTargetDependency */,
@@ -5242,7 +5099,6 @@
 				D382282D066998F600AD3D37 /* CopyFiles */,
 			);
 			buildRules = (
-				D3E6C3F30911E88000E3B744 /* PBXBuildRule */,
 			);
 			dependencies = (
 				D38228140669985C00AD3D37 /* PBXTargetDependency */,
@@ -5260,7 +5116,6 @@
 				D38226D206697F7000AD3D37 /* Frameworks */,
 			);
 			buildRules = (
-				D3E6C3F60911E89400E3B744 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -5278,7 +5133,6 @@
 				D38A5F0606711DDB00E9E666 /* Frameworks */,
 			);
 			buildRules = (
-				D3E6C3F20911E86500E3B744 /* PBXBuildRule */,
 			);
 			dependencies = (
 				55FCD72D1B12DB8A00A57C43 /* PBXTargetDependency */,
@@ -5354,7 +5208,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				551BADBB13C1596300080BD5 /* InfoPlist.strings in Resources */,
+				551BADBB13C1596300080BD5 /* InfoPlist.stringsdict in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6027,14 +5881,14 @@
 			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
-		D376F3C7040DF6C200A80164 /* InfoPlist.strings */ = {
+		D376F3C7040DF6C200A80164 /* InfoPlist.stringsdict */ = {
 			isa = PBXVariantGroup;
 			children = (
 				559BDDB62B04426700CC9D2E /* fr */,
 				559BDDB72B04427300CC9D2E /* en */,
 				559BDDBA2B04427600CC9D2E /* de */,
 			);
-			name = InfoPlist.strings;
+			name = InfoPlist.stringsdict;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

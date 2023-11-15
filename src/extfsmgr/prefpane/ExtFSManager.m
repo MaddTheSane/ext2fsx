@@ -828,10 +828,10 @@ info_alt_switch:
       [button setBezelStyle:NSShadowlessSquareBezelStyle];
       [button setButtonType:NSMomentaryPushInButton];
       // [button setShowsBorderOnlyWhileMouseInside:YES];
-      [buttonCell setAlignment:NSCenterTextAlignment];
+      [buttonCell setAlignment:NSTextAlignmentCenter];
       [buttonCell setTarget:self];
       [buttonCell setAction:tbactions[i]];
-      [buttonCell sendActionOn:NSLeftMouseUp];
+      [buttonCell sendActionOn:NSEventMaskLeftMouseUp];
       [buttonCell setImageDimsWhenDisabled:YES];
       
       tmp = titles[i];

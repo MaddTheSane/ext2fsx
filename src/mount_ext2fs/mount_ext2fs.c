@@ -105,9 +105,7 @@ static char *progname;
 #include "mount_extmgr.c"
 
 int
-main(argc, argv)
-   int argc;
-   char *argv[];
+main(int argc, char *argv[])
 {
    SCDynamicStoreRef dynStoreRef;
    struct ext2_args args;
